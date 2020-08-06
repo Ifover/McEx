@@ -28,7 +28,7 @@ mCardUserThemeList = {
     "cmd": "card_user_theme_list",
     "h5ver": 1,
     "uin": 1224842990,
-    "tid": 959,
+    "tid": 964,
 }
 res = axios.post(url=baseUrl, params=mCardUserThemeList)
 root = ElementTree.XML(res.text)
@@ -41,7 +41,7 @@ for uin in nodeList:
     userList = userList + uins.split('|')
 
 userList = [i for i in userList if i != '']
-print(userList)
+# print(userList)
 
 
 # 魔卡师信息
@@ -63,8 +63,9 @@ for opuin in userList:
 
     for card in changeBoxsCards:
         # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
-        if(card.attrib["id"] == '14699'):
-            print('找到啦==>' + opuin)
+        if(card.attrib["id"] == '14759' and card.attrib["unlock"] == '0' ):
+            # print(card.attrib["unlock"])
+            print('找到啦==>http://appimg2.qq.com/card/index_v3.html#opuin=' + opuin)
             break       #卡友可能有多张该卡,避免没必要的输出
             # print(card.attrib["id"])
             # print(cardsList[card.attrib["id"]]['cardName'])
