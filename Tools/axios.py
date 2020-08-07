@@ -24,13 +24,9 @@ import requests
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@JmqwE0LOc",
+    "skey": "@LraMTiHsv",
 }
 
 
 def post(url, data={}, params={}):
     return requests.post(url=url, data=data, params=params, cookies=cookies)
-
-
-def get(url, params={}):
-    return requests.get(url=url, params=params)
