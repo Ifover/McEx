@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 import requests
 from xml.etree import ElementTree
-
+import sys
+sys.path.append('.\\Tools')
+import axios  # NOQA: E402
 
 app = FastAPI()
 
@@ -13,29 +15,46 @@ def calculate(a: int = None, b: int = None):
     return res
 
 
-@app.get('/mcex/card')
+@app.get('/mcex/getUserInfo')
 def card(a: int = None, b: int = None):
-    r = requests.get('https://appimg.qq.com/card/mk/card_info_v3.xml')
-    str = r.text
-    str = str.replace('&', '&amp;')  # 替换"&"为转义的字符
 
-    root = ElementTree.XML(str)
+    baseUrl = 'https://mfkp.qq.com/cardshow'
 
-    themes = root.findall("theme")
+    mCardUserMainPage = {
+        "cmd": "card_user_mainpage",
+        "h5ver": 1,
+    }
+    mCardUserMainPageData = {
+        "uin": 1224842990,
+        # "opuin": opuin
+    }
+    r = axios.post(url=baseUrl, params=mCardUserMainPage,
+                   data=mCardUserMainPageData)
+    root = ElementTree.XML(r.text)
+    changebox = root.find("changebox")
+    changeBoxCards = changebox.findall("card")
+    arr = []
+    for card in changeBoxCards:
+        arr.append({
+            "slot": card.attrib["slot"],
+            "id": card.attrib["id"],
+            "unlock": card.attrib["unlock"],
+        })
 
-    cardsList = {}
-    cards = root.findall("card")
+    storebox = root.find("storebox")
+    storeboxCards = changebox.findall("card")
+    arr2 = []
+    for card in storeboxCards:
+        arr2.append({
+            "slot": card.attrib["slot"],
+            "id": card.attrib["id"],
+            "unlock": card.attrib["unlock"],
+        })
+    return {
+        "changebox": arr,
+        "storebox": arr2
+    }
 
-    for card in cards:
-        cardsList[card.attrib["id"]] = {
-            "id":  card.attrib["id"],
-            "themeId":  card.attrib["theme_id"],
-            "name":  card.attrib["name"],
-            "price":  card.attrib["price"],
-        }
-
-
-    return cardsList
 
 if __name__ == '__main__':
     import uvicorn

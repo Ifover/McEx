@@ -63,7 +63,7 @@ for opuin in userList:
 
     for card in changeBoxsCards:
         # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
-        if(card.attrib["id"] == '14759' and card.attrib["unlock"] == '0' ):
+        if(card.attrib["id"] == '11265' and card.attrib["unlock"] == '0' ):
             # print(card.attrib["unlock"])
             print('找到啦==>http://appimg2.qq.com/card/index_v3.html#opuin=' + opuin)
             break       #卡友可能有多张该卡,避免没必要的输出
