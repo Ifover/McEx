@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header
+from typing import List
 import requests
 from xml.etree import ElementTree
 import sys
@@ -16,8 +17,9 @@ def calculate(a: int = None, b: int = None):
 
 
 @app.get('/mcex/getUserInfo')
-def card(a: int = None, b: int = None):
+def card(cookie: List[str] = Header(None)):
 
+    print(cookie)
     baseUrl = 'https://mfkp.qq.com/cardshow'
 
     mCardUserMainPage = {
