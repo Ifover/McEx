@@ -37,7 +37,6 @@ import queue
 # print("对%d个卡友进行搜索" % (len(userList)))
 
 
-
 def searchCard(id, userList, q):
     global exitFlag
     # 魔卡师信息
@@ -56,11 +55,11 @@ def searchCard(id, userList, q):
             r = axios.post(url=baseUrl, params=mCardUserMainPage,
                            data=mCardUserMainPageData)
             root = ElementTree.XML(r.text)
-            #有时候可能会请求失败
+            # 有时候可能会请求失败
             if root.attrib["code"] != '0':
                 continue
             changebox = root.find("changebox")
-            #针对那些有换卡要求的
+            # 针对那些有换卡要求的
             if changebox.attrib["exch"] != '0,0,0,0':
                 continue
 
@@ -105,7 +104,7 @@ mCardUserThemeList = {
 exitFlag = 0
 
 if __name__ == "__main__":
-    times = 1
+    times = 0
     isFind = False  # 找到了就会变成True
     while (not exitFlag):
         # print(isFind)
@@ -119,7 +118,10 @@ if __name__ == "__main__":
             # userList = userList + uins.split('|')
             userList = uins.split('|')
             userList = [i for i in userList if i != '']
+            times = times + len(userList)
             usersList.append(userList)
+
+        print('\rsearching... Times:{0}'.format(times), end='')
 
         workQueue = queue.Queue(len(usersList))
         threads = []
@@ -143,4 +145,4 @@ if __name__ == "__main__":
         # 等待所有线程完成
         for t in threads:
             t.join()
-        print("退出主线程")
+        # print("退出主线程")
