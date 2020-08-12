@@ -1,40 +1,9 @@
-import sys
-sys.path.append('.\\Tools')
-import axios  # NOQA: E402
 import execjs
+import requests
 from xml.etree import ElementTree
 import threading
 import queue
 # 优先级队列模块
-
-
-# url = 'http://appimg2.qq.com/card/mk/card_info_v3.js'
-# cardInfo = axios.post(url=url)
-
-# with open(r".\card_info_v3.js", 'r') as f:
-#     cardInfo = f.read()
-
-# jsdoc = execjs.compile(cardInfo)
-# dr = jsdoc.eval('card_list')
-
-# cardsList = {}
-# for card in dr:
-#     cardsList[str(card[0])] = {
-#         "cardId": card[0],
-#         "themeId": card[1],
-#         "cardName": card[2]
-#     }
-
-
-# def searchUser():
-#     global isFind
-# print('第' + str(times) + '次搜搜开始')
-# times += 1
-
-# print(userList)
-# _thread.start_new_thread(searchCard, (userList,))
-# searchCard(userList)
-# print("对%d个卡友进行搜索" % (len(userList)))
 
 
 def searchCard(id, userList, q):
@@ -52,32 +21,37 @@ def searchCard(id, userList, q):
                 "opuin": opuin
             }
 
-            r = axios.post(url=baseUrl, params=mCardUserMainPage,
-                           data=mCardUserMainPageData)
+            r = post(url=baseUrl, params=mCardUserMainPage,
+                     data=mCardUserMainPageData)
             root = ElementTree.XML(r.text)
             # 有时候可能会请求失败
             if root.attrib["code"] != '0':
                 continue
             changebox = root.find("changebox")
             # 针对那些有换卡要求的
-            if changebox.attrib["exch"] != '0,0,0,0':
-                continue
+            if isExch:
+                if changebox.attrib["exch"] != '0,0,0,0':
+                    continue
 
             changeBoxsCards = changebox.findall("card")
 
             for card in changeBoxsCards:
                 # print(card)
                 # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
-                if(card.attrib["id"] == '10368' and card.attrib["unlock"] == '0'):
+                if(int(card.attrib["id"]) in findCards and card.attrib["unlock"] == '0'):
                     # print(card.attrib["unlock"])
 
                     exitFlag = 1
-                    print(
-                        '找到啦==>http://appimg2.qq.com/card/index_v3.html#opuin=' + opuin)
+                    print("\n找到啦【{id}】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
+                        id=card.attrib["id"], opuin=opuin))
                     break  # 卡友可能有多张该卡,避免没必要的输出
 
                     # print(card.attrib["id"])
                     # print(cardsList[card.attrib["id"]]['cardName'])
+
+
+def post(url, data={}, params={}):
+    return requests.post(url=url, data=data, params=params, cookies=cookies)
 
 
 class myThread (threading.Thread):
@@ -92,23 +66,31 @@ class myThread (threading.Thread):
         searchCard(self.threadID, self.userList, self.q)
         # print("退出线程：" + str(len(self.userList)))
 
-
+exitFlag = 0
 baseUrl = 'https://mfkp.qq.com/cardshow'
 mCardUserThemeList = {
     "cmd": "card_user_theme_list",
     "h5ver": 1,
     "uin": 1224842990,
-    "tid": 648,
+    "tid": 761,  #卡友正在练的套卡ID
 }
 
-exitFlag = 0
+cookies = {
+    "uin": "o1224842990",
+    "skey": "@HU8yk7B81",
+}
+
+isExch = True #跳过有要求的卡友
+
+#要找寻的卡片ID
+findCards = [12144]
 
 if __name__ == "__main__":
     times = 0
     isFind = False  # 找到了就会变成True
     while (not exitFlag):
         # print(isFind)
-        res = axios.post(url=baseUrl, params=mCardUserThemeList)
+        res = post(url=baseUrl, params=mCardUserThemeList)
         root = ElementTree.XML(res.text)
         nodeList = root.findall("node")
         usersList = []

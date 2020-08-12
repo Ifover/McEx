@@ -24,7 +24,7 @@ import requests
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@KYVwSdfTN",
+    "skey": "@HU8yk7B81",
 }
 
 
