@@ -1,11 +1,5 @@
-import eel
-
-eel.init('web')
-
-web_options = {
-    # "mode": "chrome",
-    "port": 8080,
-    # "chromeFlags": ["-kiosk"]
-}
-
-eel.start('main.html', port=0, size=(600, 300))
+# import win32com.client
+import winsound
+# speak = win32com.client.Dispatch('SAPI.SPVOICE')
+winsound.Beep(32767, 1000)
+# speak.Speak('程序运行完毕!')
