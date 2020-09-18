@@ -1,36 +1,65 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'e:\Python\McEx\McEx.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.2
-#
-# WARNING! All changes made in this file will be lost!
-
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QIcon, QBrush, QColor
+import sys
+import time
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
 
-import sys
-import time
 import requests
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QBrush, QColor, QIcon
+from PyQt5.QtWidgets import *
+
+import threading
+import search
+
 res = requests.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
 # res = requests.get("./card_info_v3.xml")
 xmlStr = res.content.decode()
 xmlStr = xmlStr.replace("&", "&amp;")
 root = ElementTree.XML(xmlStr)
 
+cookies = {
+    "uin": "o1224842990",
+    "skey": "@G92uIc33c",
+}
+
 cards = root.findall("card")
 themes = root.findall("theme")
+
+baseUrl = 'https://mfkp.qq.com/cardshow'
+mCardUserMainPage = {
+    "cmd": "card_user_mainpage",
+    "h5ver": 1,
+}
+mCardUserMainPageData = {
+    "uin": 1224842990,
+}
+rootCardDict = {}
+for card in cards:
+    rootCardDict[card.attrib["id"]] = {
+        "id": card.attrib["id"],
+        "themeId": card.attrib["theme_id"],
+        "cardName": card.attrib["name"],
+        "price": card.attrib["price"],
+    }
+# print(dict.items(rootCardDict))
+
+    # print(num)
+
+
+def post(url, data={}, params={}):
+    r = requests.post(url=url, data=data, params=params, cookies=cookies)
+    r.keep_alive = False
+    return r
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 400)
+        MainWindow.setFixedSize(800, 400)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -45,11 +74,56 @@ class Ui_MainWindow(object):
         self.groupBox2.setAutoFillBackground(True)
         self.groupBox2.setTitle("选择卡片")
 
+        self.treeWidget = QTreeWidget(MainWindow)
+        self.treeWidget.setGeometry(QtCore.QRect(300, 75, 240, 265))
+        self.treeWidget.setHeaderLabels(['卡名', '价格', '套卡'])
+        # self.treeWidget.setIndentation(0)
+        self.treeWidget.setColumnWidth(0, 110)
+        self.treeWidget.setColumnWidth(1, 40)
+        self.treeWidget.setColumnWidth(2, 70)
+
+        # self.treeWidget.clicked.connect(self.onClicked)
+
+        userInfoRes = post(url=baseUrl, params=mCardUserMainPage,
+                           data=mCardUserMainPageData)
+
+        etXml = ElementTree.XML(userInfoRes.text)
+        changeBox = etXml.find("changebox")
+        changeBoxsCards = changeBox.findall("card")
+        root = QTreeWidgetItem(self.treeWidget)
+        root.setText(0, "--换卡箱--")
+
+        for cbCard in changeBoxsCards:
+            child = QTreeWidgetItem()
+            if int(cbCard.attrib["id"]) > 0:  # 跳过一些莫名其妙的卡
+                child.setText(0, rootCardDict[cbCard.attrib["id"]]['cardName'])
+                child.setText(1, rootCardDict[cbCard.attrib["id"]]['price'])
+                child.setText(2, rootCardDict[cbCard.attrib["id"]]['themeId'])
+                root.insertChild(0, child)
+
+        storeboxBox = etXml.find("storebox")
+        storeboxBoxCards = storeboxBox.findall("card")
+        root = QTreeWidgetItem(self.treeWidget)
+        root.setText(0, "--保险箱--")
+
+        for cbCard in storeboxBox:
+            child = QTreeWidgetItem()
+            if int(cbCard.attrib["id"]) > 0:  # 跳过一些莫名其妙的卡
+                child.setText(0, rootCardDict[cbCard.attrib["id"]]['cardName'])
+                child.setText(1, rootCardDict[cbCard.attrib["id"]]['price'])
+                child.setText(2, rootCardDict[cbCard.attrib["id"]]['themeId'])
+                root.insertChild(0, child)
+
         self.listBox = QListWidget(self.groupBox2)
-        self.listBox.setGeometry(QRect(5, 18, 170, 322))
+        self.listBox.setGeometry(QRect(5, 18, 170, 280))
         self.listBox.setSelectionMode(
             QtWidgets.QAbstractItemView.MultiSelection)
         self.listBox.clicked.connect(self.handleListChanged)
+
+        self.btnSearch = QtWidgets.QPushButton(self.groupBox2)
+        self.btnSearch.setGeometry(QtCore.QRect(5, 302, 170, 40))
+        self.btnSearch.setText("开始搜索")
+        self.btnSearch.clicked.connect(self.btnStartSearch)
 
         self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
         self.pushButton = QtWidgets.QPushButton(self.groupBox)
@@ -58,7 +132,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(
             ">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
         self.pushButton.setCheckable(True)
-        self.pushButton.clicked.connect(self.btnClick)
+        self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
 
         self.comboBox = QComboBox(self.groupBox)
         self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
@@ -94,6 +168,10 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    def componendNum(self, num):
+        # self.statusBar.showMessage('rsearching...' + str(num), 5000)
+        print('\rsearching... Times:{0}'.format(num), end='')
+
     def handleListChanged(self, currentRow):
         # if (currentRow >= 0):
         # print(currentRow.row())
@@ -109,6 +187,11 @@ class Ui_MainWindow(object):
         #     print(target_list.text())
         # for target_list in self.listBox.selectedItems():
         #     print(target_list.text())
+
+    def btnStartSearch(self):
+        # th = threading.Thread(target="search.startSearch")
+        # th.start()
+        print(search.startSearch())
 
     def showTreeWidget(self):
         self.treeWidget.invisibleRootItem()
@@ -128,25 +211,15 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
-    def btnClick(self):
+    def btnSelectThemeShowHide(self):
         if self.pushButton.isChecked():
-            self.pushButton.setText(
-                "<\n<\n<\n<\n<\n<\n<\n收\n起\n选\n择\n<\n<\n<\n<\n<\n<\n<")
-            self.listView_Anim.setDuration(300)
-            self.listView_Anim.setStartValue(QtCore.QRect(-165, 28, 210, 345))
-            self.listView_Anim.setEndValue(QtCore.QRect(10, 28, 210, 345))
-            self.listView_Anim.start()
+            self.selectThemeShow()
         else:
-            self.pushButton.setText(
-                ">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
-            self.listView_Anim.setDuration(300)
-            self.listView_Anim.setStartValue(QtCore.QRect(10, 28, 210, 345))
-            self.listView_Anim.setEndValue(QtCore.QRect(-165, 28, 210, 345))
-            self.listView_Anim.start()
+            self.selectThemeHide()
 
     def onClicked(self, index):
         i = self.treeWidget.currentItem()
-        if i.text(1):
+        if i.text(1):  # 获取选择套卡的themeId
             # print(i.text(0), i.text(1))
             self.currentCards = []
             for card in cards:
@@ -163,9 +236,30 @@ class Ui_MainWindow(object):
             for item in self.currentCards:
                 self.item = QListWidgetItem(
                     item['name'] + "[" + str(item['price']) + "]")
-                self.listBox.insertItem(0, self.item)
+                self.listBox.addItem(self.item)
+                # self.listBox.insertItem(0, self.item)
+            self.selectThemeHide()
+
             # print(self.currentCards)
         # print('key=%s,value=%s' % (i.text(0), i.text(1)))
+
+    # 隐藏选择套卡模块
+    def selectThemeHide(self):
+        self.pushButton.setText(
+            ">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+        self.listView_Anim.setDuration(300)
+        self.listView_Anim.setStartValue(QtCore.QRect(10, 28, 210, 345))
+        self.listView_Anim.setEndValue(QtCore.QRect(-165, 28, 210, 345))
+        self.listView_Anim.start()
+
+    # 显示选择套卡模块
+    def selectThemeShow(self):
+        self.pushButton.setText(
+            "<\n<\n<\n<\n<\n<\n<\n收\n起\n选\n择\n<\n<\n<\n<\n<\n<\n<")
+        self.listView_Anim.setDuration(300)
+        self.listView_Anim.setStartValue(QtCore.QRect(-165, 28, 210, 345))
+        self.listView_Anim.setEndValue(QtCore.QRect(10, 28, 210, 345))
+        self.listView_Anim.start()
 
     def onTabWidgetClicked(self, i):
         # print(self.comboBox.currentText(), i)

@@ -42,11 +42,15 @@ def searchCard(id, userList, q):
                 if(int(card.attrib["id"]) in findCards and card.attrib["unlock"] == '0'):
                     # print(card.attrib["unlock"])
 
+                    global opuinStr
+                    opuinStr = opuin
                     exitFlag = 1
-                    print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
-                        cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
-                    winsound.Beep(600, 700)
+                    # print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
+                    #     cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
+                    # winsound.Beep(600, 700)
                     break  # 卡友可能有多张该卡,避免没必要的输出
+
+opuinStr = ''
 
 
 def post(url, data={}, params={}):
@@ -80,7 +84,7 @@ mCardUserThemeList = {
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@PWkOsIIwz",
+    "skey": "@G92uIc33c",
 }
 
 isExch = False  # 跳过有要求的卡友
@@ -88,10 +92,12 @@ isExch = False  # 跳过有要求的卡友
 # 要找寻的卡片ID
 # findCards = [12137, 12138, 12139, 12141, 12143, 12144]
 findCards = [
-    15023
+    15025
+
 ]
 
-if __name__ == "__main__":
+
+def startSearch():
     times = 0
     isFind = False  # 找到了就会变成True
     while (not exitFlag):
@@ -109,8 +115,10 @@ if __name__ == "__main__":
                 userList = [i for i in userList if i != '']
                 times = times + len(userList)
                 usersList.append(userList)
-
-            print('\rsearching... Times:{0}'.format(times), end='')
+            import Ui_McEx2
+            Ui_McEx2.Ui_MainWindow.componendNum(num=times)
+            # Ui_McEx2.componendNum(times)
+            #print('\rsearching... Times:{0}'.format(times), end='')
 
             workQueue = queue.Queue(len(usersList))
             threads = []
@@ -134,6 +142,9 @@ if __name__ == "__main__":
             # 等待所有线程完成
             for t in threads:
                 t.join()
+            # return opuinStr
             # print("退出主线程")
         except:
             pass
+    return opuinStr
+    # print('over')

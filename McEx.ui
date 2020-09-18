@@ -14,70 +14,115 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QListWidget" name="listWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>256</width>
-      <height>331</height>
-     </rect>
-    </property>
-    <property name="contextMenuPolicy">
-     <enum>Qt::DefaultContextMenu</enum>
-    </property>
-    <property name="dragEnabled">
+   <widget class="QTableWidget" name="tableWidget">
+    <property name="enabled">
      <bool>true</bool>
     </property>
-    <property name="selectionMode">
-     <enum>QAbstractItemView::MultiSelection</enum>
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>240</width>
+      <height>192</height>
+     </rect>
     </property>
-    <property name="viewMode">
-     <enum>QListView::ListMode</enum>
-    </property>
-    <property name="sortingEnabled">
-     <bool>false</bool>
-    </property>
-    <item>
+    <row>
      <property name="text">
-      <string>1212</string>
+      <string>1</string>
+     </property>
+    </row>
+    <column>
+     <property name="text">
+      <string>卡名</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>价格</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>套卡</string>
+     </property>
+    </column>
+    <item row="0" column="0">
+     <property name="text">
+      <string>黑框眼镜</string>
      </property>
     </item>
-    <item>
+    <item row="0" column="1">
      <property name="text">
-      <string>12123</string>
+      <string>10</string>
      </property>
     </item>
-    <item>
+    <item row="0" column="2">
      <property name="text">
-      <string>12</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>12</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>313</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>131</string>
+      <string>时尚男套装</string>
      </property>
     </item>
    </widget>
-   <widget class="QListView" name="listView">
+   <widget class="QTreeWidget" name="treeWidget">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>10</y>
-      <width>256</width>
-      <height>331</height>
+      <x>20</x>
+      <y>20</y>
+      <width>240</width>
+      <height>281</height>
      </rect>
     </property>
+    <property name="indentation">
+     <number>0</number>
+    </property>
+    <property name="allColumnsShowFocus">
+     <bool>true</bool>
+    </property>
+    <attribute name="headerMinimumSectionSize">
+     <number>20</number>
+    </attribute>
+    <attribute name="headerDefaultSectionSize">
+     <number>50</number>
+    </attribute>
+    <attribute name="headerShowSortIndicator" stdset="0">
+     <bool>true</bool>
+    </attribute>
+    <column>
+     <property name="text">
+      <string>卡名</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>价格</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>套卡</string>
+     </property>
+    </column>
+    <item>
+     <property name="text">
+      <string>换卡箱</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="checkState">
+      <enum>Checked</enum>
+     </property>
+     <item>
+      <property name="text">
+       <string>黑框眼镜</string>
+      </property>
+      <property name="text">
+       <string>9999</string>
+      </property>
+      <property name="text">
+       <string>时尚男装</string>
+      </property>
+     </item>
+    </item>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
