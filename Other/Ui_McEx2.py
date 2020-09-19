@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from SearchCard import SearchCard
-
 import sys
 import time
 from xml.dom.minidom import parse
@@ -16,8 +14,9 @@ from PyQt5.QtWidgets import *
 import threading
 import queue
 import winsound
-
-# import search
+import mcInfo
+import threading
+import search
 
 res = requests.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
 # res = requests.get("./card_info_v3.xml")
@@ -32,6 +31,8 @@ cookies = {
 
 cards = root.findall("card")
 themes = root.findall("theme")
+
+isExch = False  # 跳过有要求的卡友
 
 
 baseUrl = 'https://mfkp.qq.com/cardshow'
@@ -50,14 +51,28 @@ for card in cards:
         "cardName": card.attrib["name"],
         "price": card.attrib["price"],
     }
+# print(dict.items(rootCardDict))
 
-rootThemeDict = {}
-for theme in themes:
-    rootThemeDict[theme.attrib["id"]] = {
-        "id": theme.attrib["id"],
-        "themeName": theme.attrib["name"],
-        "diff": theme.attrib["diff"],
-    }
+    # print(num)
+
+mCardUserThemeList = {
+    "cmd": "card_user_theme_list",
+    "h5ver": 1,
+    "uin": 1224842990,
+    "tid": 990,  # 卡友正在练的套卡ID
+}
+
+# 要找寻的卡片ID
+# findCards = [12137, 12138, 12139, 12141, 12143, 12144]
+findCards = [
+    15087,
+    15088,
+    15089,
+    15090,
+    15091,
+    15092,
+    15093
+]
 
 
 def post(url, data={}, params={}):
@@ -85,22 +100,13 @@ class Ui_MainWindow(object):
         self.groupBox2.setAutoFillBackground(True)
         self.groupBox2.setTitle("选择卡片")
 
-        self.groupBox3 = QGroupBox(MainWindow)
-        self.groupBox3.setGeometry(QRect(240, 28, 250, 345))
-        self.groupBox3.setAutoFillBackground(True)
-        self.groupBox3.setTitle("Ifover.卡箱")
-
-        self.treeWidget = QTreeWidget(self.groupBox3)
-        self.treeWidget.setGeometry(QtCore.QRect(5, 18, 240, 323))
+        self.treeWidget = QTreeWidget(MainWindow)
+        self.treeWidget.setGeometry(QtCore.QRect(300, 75, 240, 265))
         self.treeWidget.setHeaderLabels(['卡名', '价格', '套卡'])
         # self.treeWidget.setIndentation(0)
         self.treeWidget.setColumnWidth(0, 110)
         self.treeWidget.setColumnWidth(1, 40)
         self.treeWidget.setColumnWidth(2, 70)
-        self.treeWidget.itemChanged.connect(self.treeOnClick)
-        
-
-        self.treeWidget.setRootIsDecorated(False)
 
         # self.treeWidget.clicked.connect(self.onClicked)
 
@@ -113,28 +119,13 @@ class Ui_MainWindow(object):
         root = QTreeWidgetItem(self.treeWidget)
         root.setText(0, "--换卡箱--")
 
-        changeBoxsCardsList = []
         for cbCard in changeBoxsCards:
-            id = cbCard.attrib["id"]
-            if int(id) > 0:  # 跳过一些莫名其妙的卡
-                changeBoxsCardsList.append({
-                    "cardName": rootCardDict[id]['cardName'],
-                    "price": rootCardDict[id]['price'],
-                    "themeName": rootThemeDict[rootCardDict[id]['themeId']]['themeName'],
-                    "slot": cbCard.attrib["slot"],
-                    "unlock": cbCard.attrib["unlock"],
-                    "status": cbCard.attrib["status"],
-                    "type": cbCard.attrib["type"]
-                })
-
-        changeBoxsCardsList.sort(key=lambda x: x["price"])
-        for cbCard in changeBoxsCardsList:
             child = QTreeWidgetItem()
-            child.setText(0, cbCard['cardName'])
-            child.setText(1, cbCard['price'])
-            child.setText(2, cbCard['themeName'])
-            child.setCheckState(0, not Qt.CheckState)
-            root.insertChild(0, child)
+            if int(cbCard.attrib["id"]) > 0:  # 跳过一些莫名其妙的卡
+                child.setText(0, rootCardDict[cbCard.attrib["id"]]['cardName'])
+                child.setText(1, rootCardDict[cbCard.attrib["id"]]['price'])
+                child.setText(2, rootCardDict[cbCard.attrib["id"]]['themeId'])
+                root.insertChild(0, child)
 
         storeboxBox = etXml.find("storebox")
         storeboxBoxCards = storeboxBox.findall("card")
@@ -146,12 +137,8 @@ class Ui_MainWindow(object):
             if int(cbCard.attrib["id"]) > 0:  # 跳过一些莫名其妙的卡
                 child.setText(0, rootCardDict[cbCard.attrib["id"]]['cardName'])
                 child.setText(1, rootCardDict[cbCard.attrib["id"]]['price'])
-                child.setText(
-                    2, rootThemeDict[rootCardDict[cbCard.attrib["id"]]['themeId']]['themeName'])
-                child.setCheckState(0, not Qt.CheckState)
+                child.setText(2, rootCardDict[cbCard.attrib["id"]]['themeId'])
                 root.insertChild(0, child)
-
-        self.treeWidget.expandAll()
 
         self.listBox = QListWidget(self.groupBox2)
         self.listBox.setGeometry(QRect(5, 18, 170, 280))
@@ -168,10 +155,14 @@ class Ui_MainWindow(object):
         # li.append(thread)
         # self.btnSearch.clicked.connect(self.btnStartSearch)
         self.btnSearch.clicked.connect(lambda: thread.start())
+        
 
         # for t in li:
         #     # t.join()
         #     print(2,thread.getOpuinStr())
+
+
+
 
         self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
         self.pushButton = QtWidgets.QPushButton(self.groupBox)
@@ -241,17 +232,6 @@ class Ui_MainWindow(object):
         # th.start()
 
         # print(search.startSearch())
-    def treeOnClick(self, item, cloumn):
-        if item.checkState(cloumn) == Qt.Checked:
-        #     print("checked", item.text(0), item.text(1))
-        #     list_add[item.text(0)] = item.text(0)
-            # list_add_clumon.append()
-            print(self.treeWidget.currentColumn())
-
-        # if item.checkState(cloumn) == Qt.Unchecked:
-        #     print("unchecked", item.text(0))
-        # print(list_add)
-        # print(list_add_clumon)
 
     def update(self, sec):
         print(str(sec))
@@ -341,13 +321,7 @@ class MyThread(QThread):
         self.times = 0
         self.exitFlag = False
         self.isFind = False  # 找到了就会变成True
-        self.isExch = False  # 跳过有要求的卡友
-
-        # 要找寻的卡片ID
-        self.findCards = [
-            15087,
-        ]
-       # self.sec = sec  # 默认1000秒
+        # self.sec = sec  # 默认1000秒
 
     def run(self):
         while (not self.exitFlag):
@@ -399,7 +373,7 @@ class MyThread(QThread):
                 # print("退出主线程")
             except:
                 pass
-
+        
         print(self.getOpuinStr())
         # print('over')
         # return self.opuinStr
@@ -409,6 +383,59 @@ class MyThread(QThread):
             return self.opuinStr
         except Exception:
             return None
+
+
+class SearchCard(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        threading.Thread.__init__(self)
+        self._self = args[0]
+        self.threadID = args[1]
+        self.userList = args[2]
+        self.q = args[3]
+
+    def run(self):
+        # print("开启线程：" + str(len(self.userList)))
+        # self.searchCard(self.threadID, self.userList, self.q)
+        # print("退出线程：" + str(len(self.userList)))
+        mCardUserMainPage = {
+            "cmd": "card_user_mainpage",
+            "h5ver": 1,
+        }
+
+        for opuin in self.userList:
+            if not self._self.exitFlag:
+                mCardUserMainPageData = {
+                    "uin": 1224842990,
+                    "opuin": opuin
+                }
+
+                r = post(url=baseUrl, params=mCardUserMainPage,
+                         data=mCardUserMainPageData)
+                root = ElementTree.XML(r.text)
+                # 有时候可能会请求失败
+                if root.attrib["code"] != '0':
+                    continue
+                changebox = root.find("changebox")
+                # 针对那些有换卡要求的
+                if isExch:
+                    if changebox.attrib["exch"] != '0,0,0,0':
+                        continue
+
+                changeBoxsCards = changebox.findall("card")
+
+                for card in changeBoxsCards:
+
+                    # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
+                    if(int(card.attrib["id"]) in findCards and card.attrib["unlock"] == '0'):
+                        # print(card.attrib["unlock"])
+                        # print(opuin)
+
+                        self._self.opuinStr = opuin
+                        self._self.exitFlag = True
+                        # print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
+                        #     cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
+                        # winsound.Beep(600, 700)
+                        break  # 卡友可能有多张该卡,避免没必要的输出
 
 
 if __name__ == '__main__':
