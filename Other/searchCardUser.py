@@ -75,12 +75,12 @@ mCardUserThemeList = {
     "cmd": "card_user_theme_list",
     "h5ver": 1,
     "uin": 1224842990,
-    "tid": 984,  # 卡友正在练的套卡ID
+    "tid": 990,  # 卡友正在练的套卡ID
 }
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@PWkOsIIwz",
+    "skey": "@exjcdLlkS",
 }
 
 isExch = False  # 跳过有要求的卡友
@@ -88,7 +88,11 @@ isExch = False  # 跳过有要求的卡友
 # 要找寻的卡片ID
 # findCards = [12137, 12138, 12139, 12141, 12143, 12144]
 findCards = [
-    15023
+    
+    # 15094,
+    15089,
+    # 15085,
+ 
 ]
 
 if __name__ == "__main__":

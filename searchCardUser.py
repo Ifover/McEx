@@ -80,7 +80,7 @@ mCardUserThemeList = {
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@PWkOsIIwz",
+    "skey": "@IwID4Asg7",
 }
 
 isExch = False  # 跳过有要求的卡友
@@ -88,7 +88,7 @@ isExch = False  # 跳过有要求的卡友
 # 要找寻的卡片ID
 # findCards = [12137, 12138, 12139, 12141, 12143, 12144]
 findCards = [
-    15023
+ 15024
 ]
 
 if __name__ == "__main__":

@@ -12,11 +12,13 @@ class SearchCard(threading.Thread):
         self.threadID = args[1]
         self.userList = args[2]
         self.q = args[3]
+        self.findCards = args[4]
 
     def run(self):
         # print("开启线程：" + str(len(self.userList)))
         # self.searchCard(self.threadID, self.userList, self.q)
         # print("退出线程：" + str(len(self.userList)))
+        # print(self.findCards)
         mCardUserMainPage = {
             "cmd": "card_user_mainpage",
             "h5ver": 1,
@@ -30,7 +32,7 @@ class SearchCard(threading.Thread):
                 }
 
                 r = Tools.post(params=mCardUserMainPage,
-                         data=mCardUserMainPageData)
+                               data=mCardUserMainPageData)
                 root = ElementTree.XML(r.text)
                 # 有时候可能会请求失败
                 if root.attrib["code"] != '0':
@@ -46,9 +48,8 @@ class SearchCard(threading.Thread):
                 for card in changeBoxsCards:
 
                     # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
-                    if(int(card.attrib["id"]) in self._self.findCards and card.attrib["unlock"] == '0'):
+                    if(card.attrib["id"] in self._self.findCards and card.attrib["unlock"] == '0'):
                         # print(card.attrib["unlock"])
-                        # print(opuin)
 
                         self._self.opuinStr = opuin
                         self._self.exitFlag = True
