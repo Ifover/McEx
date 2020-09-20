@@ -57,6 +57,8 @@ for theme in themes:
 class Ui_MainWindow(object):
     def __init__(self):
         self.isStart = False
+        self.cardsMine = []
+        self.cardsFriend = []
         super().__init__()
 
     def setupUi(self, MainWindow):
@@ -346,24 +348,35 @@ class Ui_MainWindow(object):
             iterator.__iadd__(1)
 
     def componendNumPrise(self):
-
-        self.statusBar.showMessage('搜索中... [{0}]'.format(num))
+        # print(len(self.cardsMine), sum(self.cardsMine))
+        # print(len(self.cardsFriend), sum(self.cardsFriend))
+        str = "已选择{l1}张，共{l2}面值的卡片 已选择{r1}张，共{r2}面值的卡片".format(
+            l1=len(self.cardsMine),
+            l2=sum(self.cardsMine),
+            r1=len(self.cardsFriend),
+            r2=sum(self.cardsFriend),
+        )
+        # self.statusBar.setStyleSheet("QWidget{color: rgb(255, 0, 0)}")
+        self.statusBar.setStyleSheet("QWidget{color: #a0cc3b}")
+        self.statusBar.showMessage(str)
 
     # 我的卡箱 - 点击
     def treeMineBoxClick(self):
         self.cardsMine = []
+
         iterator = QTreeWidgetItemIterator(self.treeMineBox)
         # print(iterator.value())
         while iterator.value():
             item = iterator.value()
             if item.checkState(0) == Qt.Checked:
                 self.cardsMine.append(int(item.text(1)))
+                self.componendNumPrise()
             iterator.__iadd__(1)
-        print("cardsMine", self.cardsMine)
-        self.componendNumPrise()
+        # print("cardsMine", self.cardsMine)
         
 
     # 卡友卡箱 - 点击
+
     def treeFriendBoxClick(self):
         self.cardsFriend = []
         iterator = QTreeWidgetItemIterator(self.treeFriendBox)
@@ -371,10 +384,10 @@ class Ui_MainWindow(object):
             item = iterator.value()
             if item.checkState(0) == Qt.Checked:
                 self.cardsFriend.append(int(item.text(1)))
-            iterator.__iadd__(1)
-        print("cardsFriend", self.cardsFriend)
-        self.componendNumPrise()
+                self.componendNumPrise()
 
+            iterator.__iadd__(1)
+        # print("cardsFriend", self.cardsFriend)
 
     # 找到卡了
 
