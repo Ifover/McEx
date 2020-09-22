@@ -23,6 +23,7 @@ class SearchUser(QThread):
         self.isExch = False   # 跳过有要求的卡友
         self.tid = args[0]
         self.findCards = args[1]  # 要找寻的卡片ID
+        print(args[1])
 
     def run(self):
         while (not self.exitFlag):
@@ -31,7 +32,7 @@ class SearchUser(QThread):
                     "cmd": "card_user_theme_list",
                     "h5ver": 1,
                     "uin": 1224842990,
-                    "tid": self.tid,  # 卡友正在练的套卡ID
+                    "tid": int(self.tid),  # 卡友正在练的套卡ID
                 }
                 res = Tools.post(url=baseUrl, params=mCardUserThemeList)
                 root = ElementTree.XML(res.text)

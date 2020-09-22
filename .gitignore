@@ -1,5 +1,4 @@
-Tools/__pycache__/__init__.cpython-37.pyc
-Tools/__pycache__/axios.cpython-37.pyc
-Tools/__pycache__/axios.cpython-38.pyc
-__pycache__/socket.cpython-38.pyc
-__pycache__/eel.cpython-38.pyc
+Tools/__pycache__/
+__pycache__/
+.idea
+.vscode

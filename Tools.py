@@ -2,17 +2,10 @@ import requests
 
 
 baseUrl = 'https://mfkp.qq.com/cardshow'
-mCardUserMainPage = {
-    "cmd": "card_user_mainpage",
-    "h5ver": 1,
-}
-mCardUserMainPageData = {
-    "uin": 1224842990,
-}
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@YubxtcQqQ",
+    "skey": "@woxi0nRHW",
 }
 
 

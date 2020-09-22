@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 import sys
 import time
 from xml.dom.minidom import parse
@@ -9,13 +7,12 @@ from xml.etree import ElementTree
 # import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QBrush, QColor, QIcon
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import Tools
 from SearchUser import SearchUser
 import threading
-
 
 # import search
 baseUrl = 'https://mfkp.qq.com/cardshow'
@@ -59,15 +56,17 @@ class Ui_MainWindow(object):
         self.isStart = False
         self.cardsMine = []
         self.cardsFriend = []
-        super().__init__()
+        self.slotMine = []
+        self.slotFriend = []
+        # super().__init__()
 
     def setupUi(self, MainWindow):
         MainWindow.setWindowTitle("MainWindow")
         MainWindow.resize(800, 400)
         MainWindow.setFixedSize(800, 400)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
+        self.statusBar = QtWidgets.QStatusBar(MainWindow)
 
         self.groupBox = QGroupBox(MainWindow)
         self.groupBox.setGeometry(QRect(-165, 28, 210, 345))
@@ -80,27 +79,20 @@ class Ui_MainWindow(object):
         self.groupBox2.setTitle("选择卡片")
 
         self.setMineBox()  # 绘制我的卡箱
-        self.setCardFriendBox()  # 绘制卡友的换卡箱
+        self.setFriendBox()  # 绘制卡友的换卡箱
         self.setBtnStartSearch()  # 开始搜索
-
-        self.btnExChange = QtWidgets.QPushButton(MainWindow)
-        self.btnExChange.setGeometry(QtCore.QRect(495, 293, 45, 80))
-        self.btnExChange.setText("交\n\n换")
-        self.btnExChange.setCheckable(True)
-        self.btnExChange.clicked.connect(self.getText)
 
         self.listBox = QListWidget(self.groupBox2)
         self.listBox.setGeometry(QRect(5, 18, 170, 280))
-        self.listBox.setSelectionMode(
-            QtWidgets.QAbstractItemView.MultiSelection)
-        # self.listBox.clicked.connect(self.handleCardSelect)
-        self.listBox.currentItemChanged.connect(self.handleCardSelect)
+        self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
+        # self.listBox.itemClicked.connect(self.handleCardSelect)
+        self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
+        # self.listBox.currentItemChanged.connect(self.handleCardSelect)
 
         self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
         self.pushButton = QtWidgets.QPushButton(self.groupBox)
         self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
-        self.pushButton.setText(
-            ">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+        self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
         self.pushButton.setCheckable(True)
         self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
 
@@ -132,7 +124,6 @@ class Ui_MainWindow(object):
         MainWindow.setMenuBar(self.menuBar)
         self.menuBar.addAction(self.menuIfover.menuAction())
 
-        self.statusBar = QtWidgets.QStatusBar(MainWindow)
         self.statusBar.showMessage("ready!")
         MainWindow.setStatusBar(self.statusBar)
 
@@ -140,28 +131,91 @@ class Ui_MainWindow(object):
 
     # 绘制 - 我的卡箱
     def setMineBox(self):
-        userInfoRes = Tools.post(url=baseUrl, params=mCardUserMainPage,
-                                 data=mCardUserMainPageData)
+        self.groupMineBox = QGroupBox(MainWindow)
+        self.groupMineBox.setGeometry(QRect(240, 28, 270, 345))
+        self.groupMineBox.setAutoFillBackground(True)
+        self.groupMineBox.setTitle("****.卡箱")
+        # self.groupMineBox.setCheckable(False)
+        self.groupMineBox.clicked.connect(self.loadMineBox)
 
-        etXml = ElementTree.XML(userInfoRes.text)
-        changeBox = etXml.find("changebox")
-
-        self.groupBox3 = QGroupBox(MainWindow)
-        self.groupBox3.setGeometry(QRect(240, 28, 250, 345))
-        self.groupBox3.setAutoFillBackground(True)
-        self.groupBox3.setTitle("Ifover.卡箱")
-
-        self.treeMineBox = QTreeWidget(self.groupBox3)
-        self.treeMineBox.setGeometry(QtCore.QRect(5, 18, 240, 323))
+        self.treeMineBox = QTreeWidget(self.groupMineBox)
+        self.treeMineBox.setGeometry(QtCore.QRect(5, 18, 260, 295))
         self.treeMineBox.setHeaderLabels(['卡名', '价格', '套卡'])
+
         # self.treeWidget.setIndentation(0)
         self.treeMineBox.setColumnWidth(0, 110)
         self.treeMineBox.setColumnWidth(1, 40)
         self.treeMineBox.setColumnWidth(2, 70)
         self.treeMineBox.clicked.connect(self.treeMineBoxClick)
         # self.treeMineBox.itemChanged.connect(self.handleChanged)
-
         self.treeMineBox.setRootIsDecorated(False)  # 隐藏箭头
+
+        self.layoutWidget = QWidget(self.groupMineBox)
+        self.layoutWidget.setGeometry(QtCore.QRect(0, 305, 271, 34))
+        self.layoutWidget.setObjectName("layoutWidget")
+
+        self.gridLayout = QGridLayout(self.layoutWidget)
+        self.gridLayout.setContentsMargins(5, 10, 5, 5)
+        self.gridLayout.setHorizontalSpacing(25)
+        self.gridLayout.setVerticalSpacing(3)
+        self.gridLayout.setObjectName("gridLayout")
+
+        self.btnMineBuy = QPushButton(self.layoutWidget)
+        self.btnMineBuy.setText("买")
+        self.btnMineBuy.setEnabled(False)
+        self.btnMineBuy.setMinimumSize(QtCore.QSize(32, 24))
+        self.gridLayout.addWidget(self.btnMineBuy, 0, 0, 1, 1)
+
+        self.btnMineSell = QPushButton(self.layoutWidget)
+        self.btnMineSell.setText("卖")
+        self.btnMineSell.setEnabled(False)
+        self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
+        self.gridLayout.addWidget(self.btnMineSell, 0, 1, 1, 1)
+
+        self.btnMineExChange = QPushButton(self.layoutWidget)
+        self.btnMineExChange.setText("换")
+        self.btnMineExChange.setEnabled(False)
+        self.btnMineExChange.clicked.connect(self.handleExchange)
+        self.btnMineExChange.setMinimumSize(QtCore.QSize(32, 24))
+        self.gridLayout.addWidget(self.btnMineExChange, 0, 2, 1, 1)
+
+        self.btnMineReload = QPushButton(self.layoutWidget)
+        self.btnMineReload.setText("刷")
+        self.btnMineReload.setMinimumSize(QtCore.QSize(32, 24))
+        self.btnMineReload.clicked.connect(self.loadMineBox)
+        self.gridLayout.addWidget(self.btnMineReload, 0, 3, 1, 1)
+
+        self.loadMineBox()
+
+    # 绘制 - 卡友卡箱
+    def setFriendBox(self):
+        self.groupBox4 = QGroupBox(MainWindow)
+        self.groupBox4.setGeometry(QRect(525, 28, 270, 345))
+        self.groupBox4.setAutoFillBackground(True)
+        self.groupBox4.setTitle("xxxxx.卡箱")
+
+        self.treeFriendBox = QTreeWidget(self.groupBox4)
+        self.treeFriendBox.setGeometry(QtCore.QRect(5, 18, 260, 323))
+        self.treeFriendBox.setHeaderLabels(['卡名', '价格', '套卡'])
+        # self.treeWidget.setIndentation(0)
+        self.treeFriendBox.setColumnWidth(0, 110)
+        self.treeFriendBox.setColumnWidth(1, 40)
+        self.treeFriendBox.setColumnWidth(2, 70)
+        self.treeFriendBox.clicked.connect(self.treeFriendBoxClick)
+
+        self.treeFriendBox.setRootIsDecorated(False)
+
+    # Load - 我的
+    def loadMineBox(self):
+
+        self.treeMineBox.clear()
+        userInfoRes = Tools.post(url=baseUrl, params=mCardUserMainPage,
+                                 data=mCardUserMainPageData)
+        etXml = ElementTree.XML(userInfoRes.text)
+
+        userInfo = etXml.find("user")
+        userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
+        self.groupMineBox.setTitle(userName + ".卡箱")
 
         changeBox = etXml.find("changebox")
         changeBoxsCards = changeBox.findall("card")
@@ -182,8 +236,8 @@ class Ui_MainWindow(object):
                     "type": cbCard.attrib["type"]
                 })
 
-        root.setText(
-            0, "-换卡箱- [{currentNum}/{maxNum}]".format(currentNum=len(changeBoxsCardsList), maxNum=changeBox.attrib["cur"]))
+        root.setText(0, "-换卡箱- [{currentNum}/{maxNum}]".format(currentNum=len(changeBoxsCardsList),
+                                                               maxNum=changeBox.attrib["cur"]))
         # root.setText(0, "-换卡箱- [" + changeBox.attrib["cur"] + "]")
 
         changeBoxsCardsList.sort(key=lambda x: x["price"])
@@ -203,8 +257,8 @@ class Ui_MainWindow(object):
         storeboxBoxCards = storeboxBox.findall("card")
         root = QTreeWidgetItem(self.treeMineBox)
         # root.setText(0, "--保险箱--")
-        root.setText(
-            0, "-保险箱- [{currentNum}/{maxNum}]".format(currentNum=len(storeboxBoxCards), maxNum=storeboxBox.attrib["cur"]))
+        root.setText(0, "-保险箱- [{currentNum}/{maxNum}]".format(currentNum=len(storeboxBoxCards),
+                                                               maxNum=storeboxBox.attrib["cur"]))
 
         for cbCard in storeboxBox:
             child = QTreeWidgetItem()
@@ -220,23 +274,7 @@ class Ui_MainWindow(object):
 
         self.treeMineBox.expandAll()
 
-    # 绘制 - 卡友卡箱
-    def setCardFriendBox(self):
-        self.groupBox4 = QGroupBox(MainWindow)
-        self.groupBox4.setGeometry(QRect(545, 28, 250, 345))
-        self.groupBox4.setAutoFillBackground(True)
-        self.groupBox4.setTitle("xxxxx.卡箱")
-
-        self.treeFriendBox = QTreeWidget(self.groupBox4)
-        self.treeFriendBox.setGeometry(QtCore.QRect(5, 18, 240, 323))
-        self.treeFriendBox.setHeaderLabels(['卡名', '价格', '套卡'])
-        # self.treeWidget.setIndentation(0)
-        self.treeFriendBox.setColumnWidth(0, 110)
-        self.treeFriendBox.setColumnWidth(1, 40)
-        self.treeFriendBox.setColumnWidth(2, 70)
-        self.treeFriendBox.clicked.connect(self.treeFriendBoxClick)
-
-        self.treeFriendBox.setRootIsDecorated(False)
+        self.statusBar.showMessage('刷新成功')
 
     # Load - 卡友
     def loadFriendBox(self):
@@ -283,17 +321,20 @@ class Ui_MainWindow(object):
     # 选择卡片
     def handleCardSelect(self):
         selectedItems = self.listBox.selectedItems()
+        self.btnSearch.setEnabled(False)
         self.selectCardList = []
         for i in list(selectedItems):
-            self.selectCardList.append(
-                self.currentCards[self.listBox.row(i)]['id'])
+            self.selectCardList.append(self.currentCards[self.listBox.row(i)]['id'])
+        if len(self.selectCardList) > 0:
+            self.btnSearch.setEnabled(True)
 
     # 绘制 - 按钮[开始搜索]
     def setBtnStartSearch(self):
         self.btnSearch = QtWidgets.QPushButton(self.groupBox2)
         self.btnSearch.setGeometry(QtCore.QRect(5, 302, 170, 40))
-        self.btnSearch.setText("开始搜索")
+        self.btnSearch.setText("搜")
         self.btnSearch.setCheckable(True)
+        self.btnSearch.setEnabled(False)
 
         self.btnSearch.clicked.connect(self.btnStartSearch)
         # self.btnSearch.clicked.connect(lambda: self.btnStartSearch)
@@ -304,7 +345,7 @@ class Ui_MainWindow(object):
         # print(self.isStart)
         if not self.isStart:
             self.isStart = True
-            self.btnSearch.setText("停止搜索")
+            self.btnSearch.setText("停")
             self.thread = SearchUser(self.themeId, self.selectCardList)
             self.thread.sec_changed_signal.connect(self.updateStatusBar)
             self.thread.theCardIsSearched.connect(self.cardSearched)
@@ -313,40 +354,38 @@ class Ui_MainWindow(object):
         else:
             self.thread.setFlag()
             # self.thread.stop()
-            self.btnSearch.setText("开始搜索")
+            self.btnSearch.setText("搜")
             # self.thread.exitFlag = True
             self.isStart = False
 
-        # if thread in self.keys():
-        #     print(self.thread)
-        # if self.btnSearch.isChecked():
+    # 换卡 - 请求
+    def handleExchange(self):
+        params = {
+            "cmd": "card_user_exchangecard",
+            "h5ver": 1,
+        }
+        data = {
+            "cmd": 1,
+            "dst": '|'.join(self.slotFriend),
+            "src": '|'.join(self.slotMine),
+            "isFriend": 1,
+            "uin": 1224842990,
+            "frnd": self.opuin
+        }
+        r = Tools.post(params=params, data=data)
+        print(r.text)
+        etXml = ElementTree.XML(r.text)
+        code = etXml.attrib['code']
+        if code == '0':
+            self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # error
+            self.statusBar.showMessage('交换成功~')
+        else:
+            self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # success
+            self.statusBar.showMessage(etXml.attrib('msg'))
 
-        #     self.btnSearch.setText("停止搜索")
-        # else:
+        self.loadFriendBox()
 
-        # self.btnSearch.setEnabled(False)
-
-        # self.thread.start()
-        # self.thread.exec()
-
-    # def handleChanged(self, item, column):
-        # 当check状态改变时得到他的状态。
-        # if item.checkState(column) == Qt.Checked:
-            # print("checked", item, item.text(column))
-        # if item.checkState(column) == Qt.Unchecked:
-            # print("unchecked", item, item.text(column))
-
-    def getText(self):
-        # print self.tree
-        iterator = QTreeWidgetItemIterator(self.treeMineBox)
-        # print(iterator.value())
-        while iterator.value():
-            item = iterator.value()
-            if item.checkState(0) == Qt.Checked:
-                print(item.text(3))
-
-            iterator.__iadd__(1)
-
+    # 计算 双方已选择卡片
     def componendNumPrise(self):
         # print(len(self.cardsMine), sum(self.cardsMine))
         # print(len(self.cardsFriend), sum(self.cardsFriend))
@@ -356,13 +395,21 @@ class Ui_MainWindow(object):
             r1=len(self.cardsFriend),
             r2=sum(self.cardsFriend),
         )
-        # self.statusBar.setStyleSheet("QWidget{color: rgb(255, 0, 0)}")
-        self.statusBar.setStyleSheet("QWidget{color: #a0cc3b}")
+
+        if len(self.cardsMine) == len(self.cardsFriend) and sum(self.cardsMine) == sum(self.cardsFriend):
+            # 这恒河里
+            self.statusBar.setStyleSheet("QWidget{color: #28a745}")
+            self.btnMineExChange.setEnabled(True)
+        else:
+            # 这布河里
+            self.statusBar.setStyleSheet("QWidget{color: #dc3545}")
+            self.btnMineExChange.setEnabled(False)
         self.statusBar.showMessage(str)
 
     # 我的卡箱 - 点击
     def treeMineBoxClick(self):
         self.cardsMine = []
+        self.slotMine = []
 
         iterator = QTreeWidgetItemIterator(self.treeMineBox)
         # print(iterator.value())
@@ -370,38 +417,42 @@ class Ui_MainWindow(object):
             item = iterator.value()
             if item.checkState(0) == Qt.Checked:
                 self.cardsMine.append(int(item.text(1)))
-                self.componendNumPrise()
+                self.slotMine.append(item.text(3))
             iterator.__iadd__(1)
+        self.componendNumPrise()
         # print("cardsMine", self.cardsMine)
-        
 
     # 卡友卡箱 - 点击
-
     def treeFriendBoxClick(self):
         self.cardsFriend = []
+        self.slotFriend = []
+
         iterator = QTreeWidgetItemIterator(self.treeFriendBox)
         while iterator.value():
             item = iterator.value()
             if item.checkState(0) == Qt.Checked:
                 self.cardsFriend.append(int(item.text(1)))
-                self.componendNumPrise()
+                self.slotFriend.append(item.text(3))
 
             iterator.__iadd__(1)
+        self.componendNumPrise()
         # print("cardsFriend", self.cardsFriend)
 
     # 找到卡了
-
     def cardSearched(self, opuin):
         self.opuin = opuin
         self.exitFlag = False
         self.btnSearch.setEnabled(True)
-        self.btnSearch.setText("开始搜索")
+        self.btnSearch.setText("搜")
+        self.statusBar.showMessage('找到了!!!')
         self.loadFriendBox()
 
+    # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):
         self.statusBar.showMessage('搜索中... [{0}]'.format(num))
         # print('\rsearching... Times:{0}'.format(num), end='')
 
+    # 绘制 - 套卡容器
     def setThemeList(self):
         self.treeWidget.invisibleRootItem()
         for index in range(1, 6):
@@ -409,13 +460,15 @@ class Ui_MainWindow(object):
             root.setText(0, "难度系数：" + ('★' * index))
             # 设置子节点1
             for theme in themes:
-                if theme.attrib['diff'] == str(index) and (int(theme.attrib['type']) in self.currentTheme["type"]) and theme.attrib["new_type"] == "0" and theme.attrib["gift"] != "":
+                if theme.attrib['diff'] == str(index) and (int(theme.attrib['type']) in self.currentTheme["type"]) and \
+                        theme.attrib["new_type"] == "0" and theme.attrib["gift"] != "":
                     child = QTreeWidgetItem()
                     child.setText(0, theme.attrib['name'])
                     child.setText(1, theme.attrib['id'])
 
                     root.insertChild(0, child)
 
+    # 选择套卡 - 确定
     def handleThemeSelect(self, index):
         i = self.treeWidget.currentItem()
         if i.text(1):  # 获取选择套卡的themeId
@@ -440,9 +493,6 @@ class Ui_MainWindow(object):
             self.selectThemeHide()
             self.pushButton.toggle()
 
-            # print(self.currentCards)
-        # print('key=%s,value=%s' % (i.text(0), i.text(1)))
-
     # 选择套卡 - 隐藏&显示
     def btnSelectThemeShowHide(self):
         self.pushButton.setEnabled(False)
@@ -454,8 +504,7 @@ class Ui_MainWindow(object):
 
     # 隐藏选择套卡模块
     def selectThemeHide(self):
-        self.pushButton.setText(
-            ">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+        self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
         self.listView_Anim.setDuration(300)
         self.listView_Anim.setStartValue(QtCore.QRect(10, 28, 210, 345))
         self.listView_Anim.setEndValue(QtCore.QRect(-165, 28, 210, 345))
@@ -463,13 +512,13 @@ class Ui_MainWindow(object):
 
     # 显示选择套卡模块
     def selectThemeShow(self):
-        self.pushButton.setText(
-            "<\n<\n<\n<\n<\n<\n<\n收\n起\n选\n择\n<\n<\n<\n<\n<\n<\n<")
+        self.pushButton.setText("<\n<\n<\n<\n<\n<\n<\n收\n起\n选\n择\n<\n<\n<\n<\n<\n<\n<")
         self.listView_Anim.setDuration(300)
         self.listView_Anim.setStartValue(QtCore.QRect(-165, 28, 210, 345))
         self.listView_Anim.setEndValue(QtCore.QRect(10, 28, 210, 345))
         self.listView_Anim.start()
 
+    # 切换套卡类型
     def onTabWidgetClicked(self, i):
         # print(self.comboBox.currentText(), i)
         self.currentTheme = self.themesList[i]

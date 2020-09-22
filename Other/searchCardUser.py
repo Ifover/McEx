@@ -45,6 +45,8 @@ def searchCard(id, userList, q):
                     exitFlag = 1
                     print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
                         cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
+                    # print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
+                    #     cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
                     winsound.Beep(600, 700)
                     break  # 卡友可能有多张该卡,避免没必要的输出
 
@@ -75,12 +77,12 @@ mCardUserThemeList = {
     "cmd": "card_user_theme_list",
     "h5ver": 1,
     "uin": 1224842990,
-    "tid": 985,  # 卡友正在练的套卡ID
+    "tid": 984,  # 卡友正在练的套卡ID
 }
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@YubxtcQqQ",
+    "skey": "@Bqdmprlxo",
 }
 
 isExch = False  # 跳过有要求的卡友
@@ -88,11 +90,7 @@ isExch = False  # 跳过有要求的卡友
 # 要找寻的卡片ID
 # findCards = [12137, 12138, 12139, 12141, 12143, 12144]
 findCards = [
-    
-    # 15094,
-    15039,
-    # 15085,
- 
+ 15023
 ]
 
 if __name__ == "__main__":
