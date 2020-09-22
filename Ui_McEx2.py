@@ -12,43 +12,6 @@ from PyQt5.QtWidgets import *
 
 import Tools
 from SearchUser import SearchUser
-import threading
-
-# import search
-baseUrl = 'https://mfkp.qq.com/cardshow'
-
-res = Tools.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
-xmlStr = res.content.decode()
-xmlStr = xmlStr.replace("&", "&amp;")
-root = ElementTree.XML(xmlStr)
-
-cards = root.findall("card")
-themes = root.findall("theme")
-
-mCardUserMainPage = {
-    "cmd": "card_user_mainpage",
-    "h5ver": 1,
-}
-mCardUserMainPageData = {
-    "uin": 1224842990,
-}
-
-rootCardDict = {}
-for card in cards:
-    rootCardDict[card.attrib["id"]] = {
-        "id": card.attrib["id"],
-        "themeId": card.attrib["theme_id"],
-        "cardName": card.attrib["name"],
-        "price": card.attrib["price"],
-    }
-
-rootThemeDict = {}
-for theme in themes:
-    rootThemeDict[theme.attrib["id"]] = {
-        "id": theme.attrib["id"],
-        "themeName": theme.attrib["name"],
-        "diff": theme.attrib["diff"],
-    }
 
 
 class Ui_MainWindow(object):
@@ -526,10 +489,52 @@ class Ui_MainWindow(object):
         self.setThemeList()
 
 
+baseUrl = 'https://mfkp.qq.com/cardshow'
+
+mCardUserMainPage = {
+    "cmd": "card_user_mainpage",
+    "h5ver": 1,
+}
+mCardUserMainPageData = {
+    "uin": 1224842990,
+}
+
+rootCardDict = {}
+rootThemeDict = {}
+
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    MainWindow = QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+    r = Tools.post(params=mCardUserMainPage, data=mCardUserMainPageData)
+
+    if r.text.find('code="0"') > 0:
+        #region 初始化字典
+        cardInfoV3 = Tools.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
+        xmlStr = cardInfoV3.content.decode()
+        xmlStr = xmlStr.replace("&", "&amp;")
+        root = ElementTree.XML(xmlStr)
+
+        cards = root.findall("card")
+        themes = root.findall("theme")
+        for card in cards:
+            rootCardDict[card.attrib["id"]] = {
+                "id": card.attrib["id"],
+                "themeId": card.attrib["theme_id"],
+                "cardName": card.attrib["name"],
+                "price": card.attrib["price"],
+            }
+
+        for theme in themes:
+            rootThemeDict[theme.attrib["id"]] = {
+                "id": theme.attrib["id"],
+                "themeName": theme.attrib["name"],
+                "diff": theme.attrib["diff"],
+            }
+        #endregion
+
+        app = QApplication(sys.argv)
+        MainWindow = QMainWindow()
+        ui = Ui_MainWindow()
+        ui.setupUi(MainWindow)
+        MainWindow.show()
+        sys.exit(app.exec_())
+    else:
+        print('error')
