@@ -152,21 +152,53 @@ class Ui_MainWindow(object):
 
     # 绘制 - 卡友卡箱
     def setFriendBox(self):
-        self.groupBox4 = QGroupBox(MainWindow)
-        self.groupBox4.setGeometry(QRect(525, 28, 270, 345))
-        self.groupBox4.setAutoFillBackground(True)
-        self.groupBox4.setTitle("xxxxx.卡箱")
+        self.groupFriendBox = QGroupBox(MainWindow)
+        self.groupFriendBox.setGeometry(QRect(525, 28, 270, 345))
+        self.groupFriendBox.setAutoFillBackground(True)
+        self.groupFriendBox.setTitle("xxxxx.卡箱")
 
-        self.treeFriendBox = QTreeWidget(self.groupBox4)
-        self.treeFriendBox.setGeometry(QtCore.QRect(5, 18, 260, 323))
+        self.treeFriendBox = QTreeWidget(self.groupFriendBox)
+        self.treeFriendBox.setGeometry(QtCore.QRect(5, 18, 260, 295))
         self.treeFriendBox.setHeaderLabels(['卡名', '价格', '套卡'])
         # self.treeWidget.setIndentation(0)
         self.treeFriendBox.setColumnWidth(0, 110)
         self.treeFriendBox.setColumnWidth(1, 40)
         self.treeFriendBox.setColumnWidth(2, 70)
         self.treeFriendBox.clicked.connect(self.treeFriendBoxClick)
-
         self.treeFriendBox.setRootIsDecorated(False)
+
+        self.layoutWidget2 = QWidget(self.groupFriendBox)
+        self.layoutWidget2.setGeometry(QtCore.QRect(0, 305, 271, 34))
+
+        self.gridLayout = QGridLayout(self.layoutWidget2)
+        self.gridLayout.setContentsMargins(5, 10, 5, 5)
+        self.gridLayout.setHorizontalSpacing(25)
+        self.gridLayout.setVerticalSpacing(3)
+
+        self.btnFriendOpen = QPushButton(self.layoutWidget2)
+        self.btnFriendOpen.setText("开")
+        self.btnFriendOpen.setEnabled(False)
+        self.btnFriendOpen.setMinimumSize(QtCore.QSize(32, 24))
+        self.gridLayout.addWidget(self.btnFriendOpen, 0, 0, 1, 1)
+
+        # self.btnMineSell = QPushButton(self.layoutWidget2)
+        # self.btnMineSell.setText("卖")
+        # self.btnMineSell.setEnabled(False)
+        # self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
+        # self.gridLayout.addWidget(self.btnMineSell, 0, 1, 1, 1)
+        #
+        # self.btnMineExChange = QPushButton(self.layoutWidget2)
+        # self.btnMineExChange.setText("换")
+        # self.btnMineExChange.setEnabled(False)
+        # self.btnMineExChange.clicked.connect(self.handleExchange)
+        # self.btnMineExChange.setMinimumSize(QtCore.QSize(32, 24))
+        # self.gridLayout.addWidget(self.btnMineExChange, 0, 2, 1, 1)
+
+        self.btnFriendReload = QPushButton(self.layoutWidget)
+        self.btnFriendReload.setText("刷")
+        self.btnFriendReload.setMinimumSize(QtCore.QSize(32, 24))
+        self.btnFriendReload.clicked.connect(self.loadFriendBox)
+        self.gridLayout.addWidget(self.btnMineReload, 0, 3, 1, 1)
 
     # Load - 我的
     def loadMineBox(self):
@@ -180,60 +212,46 @@ class Ui_MainWindow(object):
         userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
         self.groupMineBox.setTitle(userName + ".卡箱")
 
+        # --换卡箱 Start--
         changeBox = etXml.find("changebox")
         changeBoxsCards = changeBox.findall("card")
         root = QTreeWidgetItem(self.treeMineBox)
-
-        changeBoxsCardsList = []
-        for cbCard in changeBoxsCards:
-            id = cbCard.attrib["id"]
-            if int(id) > 0:  # 跳过一些莫名其妙的卡
-                changeBoxsCardsList.append({
-                    "cardId": id,
-                    "cardName": rootCardDict[id]['cardName'],
-                    "price": rootCardDict[id]['price'],
-                    "themeName": rootThemeDict[rootCardDict[id]['themeId']]['themeName'],
-                    "slot": cbCard.attrib["slot"],
-                    "unlock": cbCard.attrib["unlock"],
-                    "status": cbCard.attrib["status"],
-                    "type": cbCard.attrib["type"]
-                })
+        changeBoxsCardsList = self.disposeCardList(changeBox)
 
         root.setText(0, "-换卡箱- [{currentNum}/{maxNum}]".format(currentNum=len(changeBoxsCardsList),
                                                                maxNum=changeBox.attrib["cur"]))
-        # root.setText(0, "-换卡箱- [" + changeBox.attrib["cur"] + "]")
-
-        changeBoxsCardsList.sort(key=lambda x: x["price"])
         for cbCard in changeBoxsCardsList:
             child = QTreeWidgetItem()
-            child.setText(0, "{lock}{name}".format(
-                lock='' if cbCard['unlock'] == '0' else '[锁]', name=cbCard['cardName']))
-            child.setText(1, cbCard['price'])
+            child.setText(0,
+                          "{lock}{name}".format(lock='' if cbCard['unlock'] == '0' else '[锁]', name=cbCard['cardName']))
+            child.setText(1, str(cbCard['price']))
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_0')
             child.setCheckState(0, not Qt.CheckState)
             child.setToolTip(0, cbCard['cardName'])
+            child.setToolTip(2, cbCard['themeName'])
 
             root.insertChild(0, child)
 
+        # --保险箱 Start--
         storeboxBox = etXml.find("storebox")
         storeboxBoxCards = storeboxBox.findall("card")
         root = QTreeWidgetItem(self.treeMineBox)
-        # root.setText(0, "--保险箱--")
+        storeboxBoxCardsList = self.disposeCardList(storeboxBox)
         root.setText(0, "-保险箱- [{currentNum}/{maxNum}]".format(currentNum=len(storeboxBoxCards),
                                                                maxNum=storeboxBox.attrib["cur"]))
 
-        for cbCard in storeboxBox:
+        for cbCard in storeboxBoxCardsList:
             child = QTreeWidgetItem()
-            id = cbCard.attrib["id"]
-            if int(id) > 0:  # 跳过一些莫名其妙的卡
-                child.setText(0, rootCardDict[id]['cardName'])
-                child.setText(1, rootCardDict[id]['price'])
-                child.setText(
-                    2, rootThemeDict[rootCardDict[id]['themeId']]['themeName'])
-                child.setText(3, id + '_' + cbCard.attrib["slot"] + '_1')
-                child.setCheckState(0, not Qt.CheckState)
-                root.insertChild(0, child)
+            child.setText(0, cbCard['cardName'])
+            child.setText(1, str(cbCard['price']))
+            child.setText(2, cbCard['themeName'])
+            child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_1')
+            child.setCheckState(0, not Qt.CheckState)
+            child.setToolTip(0, cbCard['cardName'])
+            child.setToolTip(2, cbCard['themeName'])
+
+            root.insertChild(0, child)
 
         self.treeMineBox.expandAll()
 
@@ -241,6 +259,7 @@ class Ui_MainWindow(object):
 
     # Load - 卡友
     def loadFriendBox(self):
+        self.treeFriendBox.clear()
         data = {
             "uin": 1224842990,
             "opuin": self.opuin
@@ -249,8 +268,14 @@ class Ui_MainWindow(object):
                                  data=data)
 
         etXml = ElementTree.XML(userInfoRes.text)
+
+        userInfo = etXml.find("user")
+        userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
+        self.groupMineBox.setTitle(userName + ".卡箱")
+
         changeBox = etXml.find("changebox")
         changeBoxsCards = changeBox.findall("card")
+
         root = QTreeWidgetItem(self.treeFriendBox)
         root.setText(0, "--换卡箱--")
 
@@ -280,6 +305,27 @@ class Ui_MainWindow(object):
             root.insertChild(0, child)
 
         self.treeFriendBox.expandAll()
+
+    # 处理 - 卡片
+    def disposeCardList(self, list):
+        newList = []
+        for item in list:
+            id = item.attrib["id"]
+            if int(id) > 0:  # 跳过一些莫名其妙的卡
+                newList.append({
+                    "cardId": id,
+                    "themeId": rootCardDict[id]['themeId'],
+                    "cardName": rootCardDict[id]['cardName'],
+                    "price": int(rootCardDict[id]['price']),
+                    "themeName": rootThemeDict[rootCardDict[id]['themeId']]['themeName'],
+                    "slot": item.attrib["slot"],
+                    "unlock": item.attrib["unlock"] if "unlock" in item.attrib.keys() else 0,
+                    "status": item.attrib["status"],
+                    "type": item.attrib["type"]
+                })
+        newList.sort(key=lambda x: x["price"])
+        # newList.sort(key=lambda x: x["themeId"])
+        return newList
 
     # 选择卡片
     def handleCardSelect(self):
@@ -449,8 +495,7 @@ class Ui_MainWindow(object):
             self.currentCards.sort(key=lambda x: x["price"])
             self.listBox.clear()
             for item in self.currentCards:
-                self.item = QListWidgetItem(
-                    item['name'] + "[" + str(item['price']) + "]")
+                self.item = QListWidgetItem(item['name'] + "[" + str(item['price']) + "]")
                 self.listBox.addItem(self.item)
                 # self.listBox.insertItem(0, self.item)
             self.selectThemeHide()
@@ -506,7 +551,7 @@ if __name__ == '__main__':
     r = Tools.post(params=mCardUserMainPage, data=mCardUserMainPageData)
 
     if r.text.find('code="0"') > 0:
-        #region 初始化字典
+        # region 初始化字典
         cardInfoV3 = Tools.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
         xmlStr = cardInfoV3.content.decode()
         xmlStr = xmlStr.replace("&", "&amp;")
@@ -528,7 +573,7 @@ if __name__ == '__main__':
                 "themeName": theme.attrib["name"],
                 "diff": theme.attrib["diff"],
             }
-        #endregion
+        # endregion
 
         app = QApplication(sys.argv)
         MainWindow = QMainWindow()
@@ -538,3 +583,8 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     else:
         print('error')
+        from WebLogin import window
+        app2 = QApplication(sys.argv)
+        w = window()
+        w.show()
+        sys.exit(app2.exec_())

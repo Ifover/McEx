@@ -38,7 +38,7 @@ class SearchUser(QThread):
                 root = ElementTree.XML(res.text)
                 nodeList = root.findall("node")
                 usersList = []
-                nameList = []
+
 
                 for uin in nodeList:
                     uins = uin.attrib["uin"]
@@ -46,10 +46,6 @@ class SearchUser(QThread):
                     userList = [i for i in userList if i != '']  # 去除空
                     self.times += len(userList)
                     usersList.append(userList)
-
-                    # print(times)
-                # print('\rsearching... Times:{0}'.format(self.times), end='')
-                # print(usersList)
 
                 self.sec_changed_signal.emit(self.times)
                 workQueue = queue.Queue(len(usersList))
@@ -59,12 +55,8 @@ class SearchUser(QThread):
                 # 填充队列
                 for index in range(len(usersList)):
                     workQueue.put(index)
-                # print(usersList)
                 # 创建新线程
                 for userList in usersList:
-                    # print(userList)
-                    # print(threadID, userList, workQueue)
-
                     thread = SearchCard(
                         self, threadID, userList, workQueue, self.findCards)
                     # thread = searchCard(self, threadID, userList, workQueue)
@@ -96,8 +88,6 @@ class SearchUser(QThread):
 
     def getOpuinStr(self):
         try:
-            # print(self.opuinStr)
-
             return self.opuinStr
         except Exception:
             return None
