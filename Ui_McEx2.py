@@ -25,8 +25,8 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setWindowTitle("MainWindow")
-        MainWindow.resize(800, 400)
-        MainWindow.setFixedSize(800, 400)
+        MainWindow.resize(515, 400)
+        MainWindow.setFixedSize(515, 400)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
@@ -181,24 +181,12 @@ class Ui_MainWindow(object):
         self.btnFriendOpen.setMinimumSize(QtCore.QSize(32, 24))
         self.gridLayout.addWidget(self.btnFriendOpen, 0, 0, 1, 1)
 
-        # self.btnMineSell = QPushButton(self.layoutWidget2)
-        # self.btnMineSell.setText("卖")
-        # self.btnMineSell.setEnabled(False)
-        # self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
-        # self.gridLayout.addWidget(self.btnMineSell, 0, 1, 1, 1)
-        #
-        # self.btnMineExChange = QPushButton(self.layoutWidget2)
-        # self.btnMineExChange.setText("换")
-        # self.btnMineExChange.setEnabled(False)
-        # self.btnMineExChange.clicked.connect(self.handleExchange)
-        # self.btnMineExChange.setMinimumSize(QtCore.QSize(32, 24))
-        # self.gridLayout.addWidget(self.btnMineExChange, 0, 2, 1, 1)
 
-        self.btnFriendReload = QPushButton(self.layoutWidget)
+        self.btnFriendReload = QPushButton(self.layoutWidget2)
         self.btnFriendReload.setText("刷")
         self.btnFriendReload.setMinimumSize(QtCore.QSize(32, 24))
         self.btnFriendReload.clicked.connect(self.loadFriendBox)
-        self.gridLayout.addWidget(self.btnMineReload, 0, 3, 1, 1)
+        self.gridLayout.addWidget(self.btnFriendReload, 0, 3, 1, 1)
 
     # Load - 我的
     def loadMineBox(self):
@@ -271,7 +259,7 @@ class Ui_MainWindow(object):
 
         userInfo = etXml.find("user")
         userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
-        self.groupMineBox.setTitle(userName + ".卡箱")
+        self.groupFriendBox.setTitle(userName + ".卡箱")
 
         changeBox = etXml.find("changebox")
         changeBoxsCards = changeBox.findall("card")
@@ -355,6 +343,8 @@ class Ui_MainWindow(object):
         if not self.isStart:
             self.isStart = True
             self.btnSearch.setText("停")
+            MainWindow.resize(515, 400)
+            MainWindow.setFixedSize(515, 400)
             self.thread = SearchUser(self.themeId, self.selectCardList)
             self.thread.sec_changed_signal.connect(self.updateStatusBar)
             self.thread.theCardIsSearched.connect(self.cardSearched)
@@ -390,8 +380,9 @@ class Ui_MainWindow(object):
             self.statusBar.showMessage('交换成功~')
         else:
             self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # success
-            self.statusBar.showMessage(etXml.attrib('msg'))
+            self.statusBar.showMessage(etXml.attrib('message'))
 
+        self.loadMineBox()
         self.loadFriendBox()
 
     # 计算 双方已选择卡片
@@ -451,10 +442,15 @@ class Ui_MainWindow(object):
     def cardSearched(self, opuin):
         self.opuin = opuin
         self.exitFlag = False
-        self.btnSearch.setEnabled(True)
+        self.isStart = False
+        self.btnSearch.toggle()
+        MainWindow.resize(800, 400)
+        MainWindow.setFixedSize(800, 400)
+        # self.btnSearch.setEnabled(True)
         self.btnSearch.setText("搜")
         self.statusBar.showMessage('找到了!!!')
         self.loadFriendBox()
+
 
     # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):

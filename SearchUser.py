@@ -20,7 +20,7 @@ class SearchUser(QThread):
         self.opuinStr = ""
         self.times = 0
         self.exitFlag = False  # 找到了就会变成True
-        self.isExch = False   # 跳过有要求的卡友
+        self.isExch = True   # 跳过有要求的卡友
         self.tid = args[0]
         self.findCards = args[1]  # 要找寻的卡片ID
         print(args[1])
