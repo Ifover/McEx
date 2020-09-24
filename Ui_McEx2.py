@@ -135,13 +135,6 @@ class Ui_MainWindow(object):
         self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
         self.gridLayout.addWidget(self.btnMineSell, 0, 1, 1, 1)
 
-        self.btnMineExChange = QPushButton(self.layoutWidget)
-        self.btnMineExChange.setText("换")
-        self.btnMineExChange.setEnabled(False)
-        self.btnMineExChange.clicked.connect(self.handleExchange)
-        self.btnMineExChange.setMinimumSize(QtCore.QSize(32, 24))
-        self.gridLayout.addWidget(self.btnMineExChange, 0, 2, 1, 1)
-
         self.btnMineReload = QPushButton(self.layoutWidget)
         self.btnMineReload.setText("刷")
         self.btnMineReload.setMinimumSize(QtCore.QSize(32, 24))
@@ -181,6 +174,12 @@ class Ui_MainWindow(object):
         self.btnFriendOpen.setMinimumSize(QtCore.QSize(32, 24))
         self.gridLayout.addWidget(self.btnFriendOpen, 0, 0, 1, 1)
 
+        self.btnFriendExChange = QPushButton(self.layoutWidget2)
+        self.btnFriendExChange.setText("换")
+        self.btnFriendExChange.setEnabled(False)
+        self.btnFriendExChange.clicked.connect(self.handleExchange)
+        self.btnFriendExChange.setMinimumSize(QtCore.QSize(32, 24))
+        self.gridLayout.addWidget(self.btnFriendExChange, 0, 2, 1, 1)
 
         self.btnFriendReload = QPushButton(self.layoutWidget2)
         self.btnFriendReload.setText("刷")
@@ -265,7 +264,7 @@ class Ui_MainWindow(object):
         changeBoxsCards = changeBox.findall("card")
 
         root = QTreeWidgetItem(self.treeFriendBox)
-        root.setText(0, "--换卡箱--")
+        root.setText(0, "-换卡箱-")
 
         changeBoxsCardsList = []
         for cbCard in changeBoxsCards:
@@ -284,12 +283,17 @@ class Ui_MainWindow(object):
 
         changeBoxsCardsList.sort(key=lambda x: x["price"])
         for cbCard in changeBoxsCardsList:
-            child = QTreeWidgetItem()
-            child.setText(0, cbCard['cardName'])
+            child = QTreeWidgetItem(root)
+
+            child.setText(0,
+                          "{lock}{name}".format(lock='' if cbCard['unlock'] == '0' else '[锁]', name=cbCard['cardName']))
             child.setText(1, cbCard['price'])
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_0')
-            child.setCheckState(0, not Qt.CheckState)
+            child.setFlags(child.flags() | Qt.ItemIsEnabled)
+            if cbCard['unlock'] == '0':
+                child.setCheckState(0, Qt.Unchecked)
+
             root.insertChild(0, child)
 
         self.treeFriendBox.expandAll()
@@ -376,11 +380,12 @@ class Ui_MainWindow(object):
         etXml = ElementTree.XML(r.text)
         code = etXml.attrib['code']
         if code == '0':
-            self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # error
+            self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # success
             self.statusBar.showMessage('交换成功~')
         else:
-            self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # success
-            self.statusBar.showMessage(etXml.attrib('message'))
+            self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # error
+            print(etXml.attrib['message'])
+            self.statusBar.showMessage(etXml.attrib['message'])
 
         self.loadMineBox()
         self.loadFriendBox()
@@ -396,7 +401,9 @@ class Ui_MainWindow(object):
             r2=sum(self.cardsFriend),
         )
 
-        if len(self.cardsMine) == len(self.cardsFriend) and sum(self.cardsMine) == sum(self.cardsFriend):
+        if len(self.cardsMine) + len(self.cardsFriend) >= 2 and \
+                len(self.cardsMine) == len(self.cardsFriend) and \
+                sum(self.cardsMine) == sum(self.cardsFriend):
             # 这恒河里
             self.statusBar.setStyleSheet("QWidget{color: #28a745}")
             self.btnMineExChange.setEnabled(True)
@@ -451,10 +458,10 @@ class Ui_MainWindow(object):
         self.statusBar.showMessage('找到了!!!')
         self.loadFriendBox()
 
-
     # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):
         self.statusBar.showMessage('搜索中... [{0}]'.format(num))
+        self.statusBar.setStyleSheet("QWidget{color: #333333}")
         # print('\rsearching... Times:{0}'.format(num), end='')
 
     # 绘制 - 套卡容器
@@ -579,8 +586,9 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     else:
         print('error')
-        from WebLogin import window
+        from WebLogin import LoginWeb
+
         app2 = QApplication(sys.argv)
-        w = window()
+        w = LoginWeb()
         w.show()
         sys.exit(app2.exec_())

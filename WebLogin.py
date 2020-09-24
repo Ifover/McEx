@@ -11,6 +11,7 @@ from PyQt5.QtCore import QCoreApplication
 class LoginWeb(QDialog):
     def __init__(self):
         super().__init__()
+        self.cookies = {}
         self.setup()
 
     def setup(self):
