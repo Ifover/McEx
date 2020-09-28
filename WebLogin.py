@@ -1,10 +1,9 @@
 import sys
 import time
 
-from PyQt5.QtCore import QUrl
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 
 # 先来个窗口
@@ -21,6 +20,8 @@ class LoginWeb(QDialog):
 
         self.loginWeb = QWebEngineView()
         self.loginWeb.resize(800, 400)  # 设置大小
+        self.loginWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        self.loginWeb.settings().setAttribute(QWebEngineSettings.PlaybackRequiresUserGesture, False)
         self.loginWeb.load(QUrl(
             "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http://appimg2.qq.com/card/index_v3.html"))  # 设置大小
         self.loginWeb.urlChanged.connect(self.pppp)

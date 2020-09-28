@@ -1,17 +1,15 @@
 import queue
 import winsound
-from PyQt5.QtCore import *
+from PyQt5.QtCore import QThread, pyqtSignal
 from SearchCard import SearchCard
 import Tools
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
 
-
 baseUrl = 'https://mfkp.qq.com/cardshow'
 
 
 class SearchUser(QThread):
-
     sec_changed_signal = pyqtSignal(int)  # 信号类型：int
     theCardIsSearched = pyqtSignal(str)  # 信号类型：str
 
@@ -20,7 +18,7 @@ class SearchUser(QThread):
         self.opuinStr = ""
         self.times = 0
         self.exitFlag = False  # 找到了就会变成True
-        self.isExch = True   # 跳过有要求的卡友
+        self.isExch = True  # 跳过有要求的卡友
         self.tid = args[0]
         self.findCards = args[1]  # 要找寻的卡片ID
         print(args[1])
@@ -38,7 +36,6 @@ class SearchUser(QThread):
                 root = ElementTree.XML(res.text)
                 nodeList = root.findall("node")
                 usersList = []
-
 
                 for uin in nodeList:
                     uins = uin.attrib["uin"]
@@ -76,7 +73,7 @@ class SearchUser(QThread):
                 # print("退出主线程")
             except:
                 pass
-        
+
         if len(self.opuinStr) > 0:
             self.theCardIsSearched.emit(self.getOpuinStr())
         # print('\n' + self.getOpuinStr())
@@ -84,7 +81,6 @@ class SearchUser(QThread):
     def setFlag(self):
         # print(self.exitFlag)
         self.exitFlag = True
-
 
     def getOpuinStr(self):
         try:

@@ -3,12 +3,16 @@ import sys
 import time
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
-
+from selenium import webdriver
+import time
 # import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import * #Qt, QPropertyAnimation
+from PyQt5.QtGui import * #QPropertyAnimation
+from PyQt5.QtWidgets import  *
+# QMainWindow, QApplication, QMenuBar, QGroupBox, QTreeWidget, QWidget, QGridLayout, \
+#     QPushButton, QTreeWidgetItem, QListWidget, QAbstractItemView, QComboBox, QListWidgetItem, QTreeWidgetItemIterator, \
+#     QMessageBox
 
 import Tools
 from SearchUser import SearchUser
@@ -22,12 +26,14 @@ class Ui_MainWindow(object):
         self.slotMine = []
         self.slotFriend = []
         self.opuin = ''
+        self.uin = "1224842990"
+        self.isExch = True
         # super().__init__()
 
     def setupUi(self, MainWindow):
         self.MainWindow = MainWindow
         MainWindow.setWindowTitle("MainWindow")
-        # MainWindow.setWindowFlags(Qt.WindowStaysOnTopHint)
+        # MainWindow.setWindowFlags(QtGui.QtWindowStaysOnTopHint)
         MainWindow.resize(515, 400)
         MainWindow.setFixedSize(515, 400)
 
@@ -53,12 +59,12 @@ class Ui_MainWindow(object):
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
 
         self.groupBox = QGroupBox(MainWindow)
-        self.groupBox.setGeometry(QRect(-165, 28, 210, 345))
+        self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
         self.groupBox.setAutoFillBackground(True)
         self.groupBox.setTitle("选择套卡")
 
         self.groupBox2 = QGroupBox(MainWindow)
-        self.groupBox2.setGeometry(QRect(50, 28, 180, 345))
+        self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
         self.groupBox2.setAutoFillBackground(True)
         self.groupBox2.setTitle("选择卡片")
 
@@ -67,7 +73,7 @@ class Ui_MainWindow(object):
         self.setBtnStartSearch()  # 开始搜索
 
         self.listBox = QListWidget(self.groupBox2)
-        self.listBox.setGeometry(QRect(5, 18, 170, 280))
+        self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
         self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
         # self.listBox.itemClicked.connect(self.handleCardSelect)
         self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
@@ -120,7 +126,7 @@ class Ui_MainWindow(object):
     # 绘制 - 我的卡箱
     def setMineBox(self):
         self.groupMineBox = QGroupBox(MainWindow)
-        self.groupMineBox.setGeometry(QRect(240, 28, 270, 345))
+        self.groupMineBox.setGeometry(QtCore.QRect(240, 28, 270, 345))
         self.groupMineBox.setAutoFillBackground(True)
         self.groupMineBox.setTitle("****.卡箱")
         # self.groupMineBox.setCheckable(False)
@@ -171,7 +177,7 @@ class Ui_MainWindow(object):
     # 绘制 - 卡友卡箱
     def setFriendBox(self):
         self.groupFriendBox = QGroupBox(MainWindow)
-        self.groupFriendBox.setGeometry(QRect(525, 28, 270, 345))
+        self.groupFriendBox.setGeometry(QtCore.QRect(525, 28, 270, 345))
         self.groupFriendBox.setAutoFillBackground(True)
         self.groupFriendBox.setTitle("xxxxx.卡箱")
 
@@ -241,7 +247,7 @@ class Ui_MainWindow(object):
             child.setText(1, str(cbCard['price']))
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_0')
-            child.setCheckState(0, not Qt.CheckState)
+            child.setCheckState(0, Qt.Unchecked)
             child.setToolTip(0, cbCard['cardName'])
             child.setToolTip(2, cbCard['themeName'])
 
@@ -261,7 +267,7 @@ class Ui_MainWindow(object):
             child.setText(1, str(cbCard['price']))
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_1')
-            child.setCheckState(0, not Qt.CheckState)
+            child.setCheckState(0, Qt.Unchecked)
             child.setToolTip(0, cbCard['cardName'])
             child.setToolTip(2, cbCard['themeName'])
 
@@ -504,6 +510,16 @@ class Ui_MainWindow(object):
 
     # 绘制 - 套卡容器
     def setThemeList(self):
+        data = {
+            "uin": self.uin,
+        }
+        res = Tools.post(url="https://card.qzone.qq.com/cgi-bin/card_mini_get", data=data)
+        etXml = ElementTree.XML(res.text)
+        Nodes = etXml.findall("Node")
+        getThemeList = []
+        for node in Nodes:
+            getThemeList.append(node.attrib['theme_id'])
+
         self.treeWidget.invisibleRootItem()
         for index in range(1, 6):
             root = QTreeWidgetItem(self.treeWidget)
@@ -515,6 +531,11 @@ class Ui_MainWindow(object):
                     child = QTreeWidgetItem()
                     child.setText(0, theme.attrib['name'])
                     child.setText(1, theme.attrib['id'])
+                    if theme.attrib['id'] in getThemeList:
+                        child.setForeground(0, QBrush(QColor("#124c6f")))
+                        child.setBackground(0, QBrush(QColor("#9ad033")))
+                    else:
+                        child.setForeground(0, QBrush(QColor("#955935")))
 
                     root.insertChild(0, child)
 
@@ -636,9 +657,26 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     else:
         print('error')
-        from WebLogin import LoginWeb
+        # from WebLogin import LoginWeb
 
-        app2 = QApplication(sys.argv)
-        w = LoginWeb()
-        w.show()
-        sys.exit(app2.exec_())
+        # app2 = QApplication(sys.argv)
+        # w = LoginWeb()
+        # w.show()
+        # sys.exit(app2.exec_())
+        driver = webdriver.Ie()
+        # driver = webdriver.PhantomJS()
+        driver.set_window_size(800, 600)
+        # driver.implicitly_wait(8)
+
+        driver.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
+        # driver.quit()
+        time.sleep(5)
+        # driver.refresh()
+        c = driver.get_cookies()
+        # print(c)
+        cookies = {}
+        # 获取cookie中的name和value,转化成requests可以使用的形式
+        for cookie in c:
+            cookies[cookie['name']] = cookie['value']
+        print(cookies)
+        # https://zhuanlan.zhihu.com/p/38900589
