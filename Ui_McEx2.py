@@ -21,12 +21,33 @@ class Ui_MainWindow(object):
         self.cardsFriend = []
         self.slotMine = []
         self.slotFriend = []
+        self.opuin = ''
         # super().__init__()
 
     def setupUi(self, MainWindow):
+        self.MainWindow = MainWindow
         MainWindow.setWindowTitle("MainWindow")
+        # MainWindow.setWindowFlags(Qt.WindowStaysOnTopHint)
         MainWindow.resize(515, 400)
         MainWindow.setFixedSize(515, 400)
+
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 20))
+
+        bar1 = self.menuBar.addMenu('File')
+        bar1.addAction('New')
+
+        bar2 = self.menuBar.addMenu('设置')
+        zd = bar2.addAction('置顶')
+        zd.setCheckable(True)
+        zd.triggered.connect(self.windowOnTop)
+
+        # zd = QAction("置顶", self)
+        # zd.setCheckable(True)
+        # bar2.addAction(zd)
+
+        MainWindow.setMenuBar(self.menuBar)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
@@ -79,13 +100,17 @@ class Ui_MainWindow(object):
         self.setThemeList()
         self.comboBox.currentIndexChanged.connect(self.onTabWidgetClicked)
         self.groupBox.raise_()
+        self.menuBar.raise_()
 
-        self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 23))
-        self.menuIfover = QtWidgets.QMenu(self.menuBar)
-        self.menuIfover.setTitle("Ifover")
-        MainWindow.setMenuBar(self.menuBar)
-        self.menuBar.addAction(self.menuIfover.menuAction())
+        # self.menuIfover = QMenu(self.menuBar)
+        # self.menuIfover.setTitle("Ifover")
+        #
+        # self.cb1 = QCheckBox('全选')
+        # # self.check_1.setTitle('置顶')
+        #
+        #
+        # self.menuBar.addAction(self.menuIfover.menuAction())
+        # self.menuBar.addAction(self.cb1)
 
         self.statusBar.showMessage("ready!")
         MainWindow.setStatusBar(self.statusBar)
@@ -106,7 +131,7 @@ class Ui_MainWindow(object):
         self.treeMineBox.setHeaderLabels(['卡名', '价格', '套卡'])
 
         # self.treeWidget.setIndentation(0)
-        self.treeMineBox.setColumnWidth(0, 110)
+        self.treeMineBox.setColumnWidth(0, 130)
         self.treeMineBox.setColumnWidth(1, 40)
         self.treeMineBox.setColumnWidth(2, 70)
         self.treeMineBox.clicked.connect(self.treeMineBoxClick)
@@ -154,7 +179,7 @@ class Ui_MainWindow(object):
         self.treeFriendBox.setGeometry(QtCore.QRect(5, 18, 260, 295))
         self.treeFriendBox.setHeaderLabels(['卡名', '价格', '套卡'])
         # self.treeWidget.setIndentation(0)
-        self.treeFriendBox.setColumnWidth(0, 110)
+        self.treeFriendBox.setColumnWidth(0, 130)
         self.treeFriendBox.setColumnWidth(1, 40)
         self.treeFriendBox.setColumnWidth(2, 70)
         self.treeFriendBox.clicked.connect(self.treeFriendBoxClick)
@@ -170,7 +195,9 @@ class Ui_MainWindow(object):
 
         self.btnFriendOpen = QPushButton(self.layoutWidget2)
         self.btnFriendOpen.setText("开")
-        self.btnFriendOpen.setEnabled(False)
+        # self.btnFriendOpen.setEnabled(False)
+        self.btnFriendOpen.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl("http://appimg2.qq.com/card/index_v3.html#opuin=" + self.opuin)))
         self.btnFriendOpen.setMinimumSize(QtCore.QSize(32, 24))
         self.gridLayout.addWidget(self.btnFriendOpen, 0, 0, 1, 1)
 
@@ -197,7 +224,7 @@ class Ui_MainWindow(object):
 
         userInfo = etXml.find("user")
         userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
-        self.groupMineBox.setTitle(userName + ".卡箱")
+        self.groupMineBox.setTitle(userName + " の 卡箱")
 
         # --换卡箱 Start--
         changeBox = etXml.find("changebox")
@@ -258,13 +285,13 @@ class Ui_MainWindow(object):
 
         userInfo = etXml.find("user")
         userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
-        self.groupFriendBox.setTitle(userName + ".卡箱")
+        self.groupFriendBox.setTitle(userName + " の 换卡箱")
 
         changeBox = etXml.find("changebox")
         changeBoxsCards = changeBox.findall("card")
 
-        root = QTreeWidgetItem(self.treeFriendBox)
-        root.setText(0, "-换卡箱-")
+        # root = QTreeWidgetItem(self.treeFriendBox)
+        # root.setText(0, "-换卡箱-")
 
         changeBoxsCardsList = []
         for cbCard in changeBoxsCards:
@@ -283,18 +310,18 @@ class Ui_MainWindow(object):
 
         changeBoxsCardsList.sort(key=lambda x: x["price"])
         for cbCard in changeBoxsCardsList:
-            child = QTreeWidgetItem(root)
+            child = QTreeWidgetItem(self.treeFriendBox)
 
             child.setText(0,
                           "{lock}{name}".format(lock='' if cbCard['unlock'] == '0' else '[锁]', name=cbCard['cardName']))
             child.setText(1, cbCard['price'])
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_0')
-            child.setFlags(child.flags() | Qt.ItemIsEnabled)
-            if cbCard['unlock'] == '0':
-                child.setCheckState(0, Qt.Unchecked)
+            child.setCheckState(0, Qt.Unchecked)
+            # child.setData(0, Qt.CheckStateRole, QVariant())
+            child.setDisabled(cbCard['unlock'] != '0')
 
-            root.insertChild(0, child)
+            # self.treeFriendBox.insertChild(0, child)
 
         self.treeFriendBox.expandAll()
 
@@ -379,14 +406,25 @@ class Ui_MainWindow(object):
         print(r.text)
         etXml = ElementTree.XML(r.text)
         code = etXml.attrib['code']
+        w = QWidget()
         if code == '0':
-            self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # success
-            self.statusBar.showMessage('交换成功~')
+            QMessageBox.information(w, "提示", "交换成功~", QMessageBox.Yes)
+            # self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # success
+            # self.statusBar.showMessage('交换成功~')
         else:
-            self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # error
-            print(etXml.attrib['message'])
-            self.statusBar.showMessage(etXml.attrib['message'])
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('错误')
+            msgBox.setIcon(QMessageBox.Critical)
+            msgBox.setText(etXml.attrib['message'])
+            msgBox.setStandardButtons(QMessageBox.Yes)
+            reply = msgBox.exec()
+            # QMessageBox.ctitical(w, "错误", "message", QMessageBox.Retry)
+            # QMessageBox.warning(w, "消息框标题", "这是一条警告。", QMessageBox.Yes | QMessageBox.No)
+            # self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # error
+            # print(etXml.attrib['message'])
+            # self.statusBar.showMessage(etXml.attrib['message'])
 
+        self.btnFriendExChange.setEnabled(False)
         self.loadMineBox()
         self.loadFriendBox()
 
@@ -406,11 +444,11 @@ class Ui_MainWindow(object):
                 sum(self.cardsMine) == sum(self.cardsFriend):
             # 这恒河里
             self.statusBar.setStyleSheet("QWidget{color: #28a745}")
-            self.btnMineExChange.setEnabled(True)
+            self.btnFriendExChange.setEnabled(True)
         else:
             # 这布河里
             self.statusBar.setStyleSheet("QWidget{color: #dc3545}")
-            self.btnMineExChange.setEnabled(False)
+            self.btnFriendExChange.setEnabled(False)
         self.statusBar.showMessage(str)
 
     # 我的卡箱 - 点击
@@ -535,6 +573,18 @@ class Ui_MainWindow(object):
         self.currentTheme = self.themesList[i]
         self.treeWidget.clear()
         self.setThemeList()
+
+    def windowOnTop(self, checked):
+        print(checked)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+
+        # if checked:
+        #     self.setWindowFlags(
+        #         self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
+        # else:
+        #     self.setWindowFlags(
+        #         self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        # self.show()
 
 
 baseUrl = 'https://mfkp.qq.com/cardshow'

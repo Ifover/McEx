@@ -18,7 +18,7 @@ baseUrl = 'https://mfkp.qq.com/cardshow'
 
 cookies = {
     "uin": "o1224842990",
-    "skey": "@buSUynUIt",
+    "skey": "@DhiG5vgE7",
 }
 
 
