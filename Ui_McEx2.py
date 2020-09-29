@@ -21,6 +21,7 @@ from WebLogin import LoginWeb
 
 from Tools import Tools
 from SearchUser import SearchUser
+import gol
 
 
 class Ui_MainWindow(object):
@@ -38,7 +39,7 @@ class Ui_MainWindow(object):
         # super().__init__()
 
     def setupUi(self, MainWindow):
-        # self.MainWindow = MainWindow
+        self.MainWindow = MainWindow
         MainWindow.setWindowTitle("MainWindow")
         MainWindow.setWindowIcon(QIcon('wand.ico'))
         # MainWindow.setWindowFlags(QtGui.QtWindowStaysOnTopHint)
@@ -47,6 +48,39 @@ class Ui_MainWindow(object):
 
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 20))
+
+        self.groupBox = QGroupBox(self.MainWindow)
+        self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
+        self.groupBox.setAutoFillBackground(True)
+        self.groupBox.setTitle("选择套卡")
+
+        self.groupBox2 = QGroupBox(self.MainWindow)
+        self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
+        self.groupBox2.setAutoFillBackground(True)
+        self.groupBox2.setTitle("选择卡片")
+
+
+
+        self.listBox = QListWidget(self.groupBox2)
+        self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
+        self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
+
+        self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
+        self.pushButton = QtWidgets.QPushButton(self.groupBox)
+        self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
+        self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+        self.pushButton.setCheckable(True)
+        self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
+
+        self.comboBox = QComboBox(self.groupBox)
+        self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
+
+        self.themesList = [
+            {"id": 1, "label": "发行", "type": [0, 2]},
+            {"id": 2, "label": "下架", "type": [1, 5]},
+            {"id": 3, "label": "闪卡", "type": [9]},
+        ]
 
         # bar2 = self.menuBar.addMenu('设置')
         # zd = bar2.addAction('置顶')
@@ -68,14 +102,21 @@ class Ui_MainWindow(object):
         # print(tool.__dict__)
         # while not tool.isLogined:
 
-        # self.init()
         self.isLogined()
-        #     r = tool.post(params=mCardUserMainPage, data=mCardUserMainPageData)
-        #     if r.text.find('code="0"') == -1:
-        #         print('error')
+        # self.init({
+        #     "code": 0,
+        #     "data": {
+        #         "cookies": {
+        #             "skey": "@zQBSjZel8",
+        #             "uin": "o1224842990"
+        #         },
+        #         "uin": 1224842990
+        #     }
+        # })
 
     def isLogined(self):
-        if not self.tool.isLogined:
+        gol._init()
+        if not gol.get_value("isLogined"):
             bar1 = self.menuBar.addAction('登录')
             # bar1.addAction('New')
             bar1.triggered.connect(self.handleLogin)
@@ -88,10 +129,13 @@ class Ui_MainWindow(object):
             self.labelStatusStr.setText("请先登录")
 
     def init(self, data):
-
         if data["code"] == 0:
             self.labelStatusStr.setText("登录成功，正在初始化数据")
-            self.tool.cookies = data['data']['cookies']
+
+            gol.set_value("cookies", data['data']['cookies'])
+            gol.set_value("uin", data['data']['uin'])
+            self.uin = data['data']['uin']
+            # self.tool.cookies = data['data']['cookies']
 
             # region 初始化字典
             cardInfoV3 = self.tool.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
@@ -99,9 +143,9 @@ class Ui_MainWindow(object):
             xmlStr = xmlStr.replace("&", "&amp;")
             root = ElementTree.XML(xmlStr)
 
-            cards = root.findall("card")
-            themes = root.findall("theme")
-            for card in cards:
+            self.cards = root.findall("card")
+            self.themes = root.findall("theme")
+            for card in self.cards:
                 rootCardDict[card.attrib["id"]] = {
                     "id": card.attrib["id"],
                     "themeId": card.attrib["theme_id"],
@@ -109,7 +153,7 @@ class Ui_MainWindow(object):
                     "price": card.attrib["price"],
                 }
 
-            for theme in themes:
+            for theme in self.themes:
                 rootThemeDict[theme.attrib["id"]] = {
                     "id": theme.attrib["id"],
                     "themeName": theme.attrib["name"],
@@ -117,43 +161,11 @@ class Ui_MainWindow(object):
                 }
             # endregion
 
-
-            self.groupBox = QGroupBox(MainWindow)
-            self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
-            self.groupBox.setAutoFillBackground(True)
-            self.groupBox.setTitle("选择套卡")
-
-            self.groupBox2 = QGroupBox(MainWindow)
-            self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
-            self.groupBox2.setAutoFillBackground(True)
-            self.groupBox2.setTitle("选择卡片")
-
+            print(33)
             self.setMineBox()  # 绘制我的卡箱
             self.setFriendBox()  # 绘制卡友的换卡箱
             self.setBtnStartSearch()  # 开始搜索
 
-            self.listBox = QListWidget(self.groupBox2)
-            self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
-            self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
-            # self.listBox.itemClicked.connect(self.handleCardSelect)
-            self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
-            # self.listBox.currentItemChanged.connect(self.handleCardSelect)
-
-            self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
-            self.pushButton = QtWidgets.QPushButton(self.groupBox)
-            self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
-            self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
-            self.pushButton.setCheckable(True)
-            self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
-
-            self.comboBox = QComboBox(self.groupBox)
-            self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
-
-            self.themesList = [
-                {"id": 1, "label": "发行", "type": [0, 2]},
-                {"id": 2, "label": "下架", "type": [1, 5]},
-                {"id": 3, "label": "闪卡", "type": [9]},
-            ]
             self.currentTheme = self.themesList[0]
 
             for item in self.themesList:
@@ -168,13 +180,12 @@ class Ui_MainWindow(object):
             self.groupBox.raise_()
             self.menuBar.raise_()
 
-
             self.labelStatusStr.setText("初始化成功~")
 
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")
         self.my_login = LoginWeb()
-        self.my_login.my_signal.connect(self.init)
+        self.my_login.my_signal.connect( self.init)
         self.my_login.start()
 
     # 绘制 - 我的卡箱
@@ -278,7 +289,7 @@ class Ui_MainWindow(object):
     def loadMineBox(self):
 
         self.treeMineBox.clear()
-        userInfoRes = tool.post(url=baseUrl, params=mCardUserMainPage,
+        userInfoRes = tool.post(params=mCardUserMainPage,
                                 data=mCardUserMainPageData)
         etXml = ElementTree.XML(userInfoRes.text)
 
@@ -579,7 +590,7 @@ class Ui_MainWindow(object):
             root = QTreeWidgetItem(self.treeWidget)
             root.setText(0, "难度系数：" + ('★' * index))
             # 设置子节点1
-            for theme in themes:
+            for theme in self.themes:
                 if theme.attrib['diff'] == str(index) and (int(theme.attrib['type']) in self.currentTheme["type"]) and \
                         theme.attrib["new_type"] == "0" and theme.attrib["gift"] != "":
                     child = QTreeWidgetItem()

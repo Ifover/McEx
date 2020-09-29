@@ -1,5 +1,6 @@
 import requests
 import requests.cookies
+import gol
 from http import cookiejar
 
 session = requests.session()
@@ -15,16 +16,22 @@ session = requests.session()
 # new_cookie_jar.save('cookies.txt', ignore_discard=True, ignore_expires=True)
 
 class Tools:
-    def __init__(self):
-        self.baseUrl = 'https://mfkp.qq.com/cardshow'
-        self.isLogined = False
-        self.cookies = {}
-        self.uin = ''
+    baseUrl = 'https://mfkp.qq.com/cardshow'
+
+    # def __init__(self):
+
+    #     isLogined = False
+    #     cookies = {}
+    #     uin = ''
 
     def post(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
+        cookies = gol.get_value("cookies")
+        # print(self.baseUrl)
+        print(cookies)
+
         try:
-            r = requests.post(url=url, data=data, params=params, cookies=self.cookies)
+            r = requests.post(url=url, data=data, params=params, cookies=cookies)
             r.keep_alive = False
             return r
         except ConnectionError:
@@ -32,8 +39,10 @@ class Tools:
 
     def get(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
+        cookies = gol.get_value("cookies")
+        # print(cookies)
         try:
-            r = requests.get(url=url, data=data, params=params, cookies=self.cookies)
+            r = requests.get(url=url, data=data, params=params, cookies=cookies)
             r.keep_alive = False
             return r
         except ConnectionError:

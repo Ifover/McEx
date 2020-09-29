@@ -1,4 +1,5 @@
 from datetime import datetime
+import sys
 from PyQt5.QtCore import QThread, pyqtSignal
 
 from selenium import webdriver
