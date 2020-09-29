@@ -2,11 +2,9 @@ import queue
 import winsound
 from PyQt5.QtCore import QThread, pyqtSignal
 from SearchCard import SearchCard
-import Tools
+from Tools import Tools
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
-
-baseUrl = 'https://mfkp.qq.com/cardshow'
 
 
 class SearchUser(QThread):
@@ -24,15 +22,16 @@ class SearchUser(QThread):
         print(args[1])
 
     def run(self):
+        tool = Tools()
         while (not self.exitFlag):
             try:
                 mCardUserThemeList = {
                     "cmd": "card_user_theme_list",
                     "h5ver": 1,
-                    "uin": 1224842990,
+                    "uin": tool.uin,
                     "tid": int(self.tid),  # 卡友正在练的套卡ID
                 }
-                res = Tools.post(url=baseUrl, params=mCardUserThemeList)
+                res = tool.post(url=baseUrl, params=mCardUserThemeList)
                 root = ElementTree.XML(res.text)
                 nodeList = root.findall("node")
                 usersList = []

@@ -3,18 +3,23 @@ import sys
 import time
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
+
 from selenium import webdriver
-import time
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
 # import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import * #Qt, QPropertyAnimation
-from PyQt5.QtGui import * #QPropertyAnimation
-from PyQt5.QtWidgets import  *
+from PyQt5.QtCore import *  # Qt, QPropertyAnimation
+from PyQt5.QtGui import *  # QPropertyAnimation
+from PyQt5.QtWidgets import *
 # QMainWindow, QApplication, QMenuBar, QGroupBox, QTreeWidget, QWidget, QGridLayout, \
 #     QPushButton, QTreeWidgetItem, QListWidget, QAbstractItemView, QComboBox, QListWidgetItem, QTreeWidgetItemIterator, \
 #     QMessageBox
+from WebLogin import LoginWeb
 
-import Tools
+from Tools import Tools
 from SearchUser import SearchUser
 
 
@@ -26,13 +31,16 @@ class Ui_MainWindow(object):
         self.slotMine = []
         self.slotFriend = []
         self.opuin = ''
-        self.uin = "1224842990"
+        self.uin = ""
         self.isExch = True
+        self.tool = Tools()
+
         # super().__init__()
 
     def setupUi(self, MainWindow):
-        self.MainWindow = MainWindow
+        # self.MainWindow = MainWindow
         MainWindow.setWindowTitle("MainWindow")
+        MainWindow.setWindowIcon(QIcon('wand.ico'))
         # MainWindow.setWindowFlags(QtGui.QtWindowStaysOnTopHint)
         MainWindow.resize(515, 400)
         MainWindow.setFixedSize(515, 400)
@@ -40,88 +48,134 @@ class Ui_MainWindow(object):
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 20))
 
-        bar1 = self.menuBar.addMenu('File')
-        bar1.addAction('New')
-
-        bar2 = self.menuBar.addMenu('设置')
-        zd = bar2.addAction('置顶')
-        zd.setCheckable(True)
-        zd.triggered.connect(self.windowOnTop)
+        # bar2 = self.menuBar.addMenu('设置')
+        # zd = bar2.addAction('置顶')
+        # zd.setCheckable(True)
+        # zd.triggered.connect(self.windowOnTop)
 
         # zd = QAction("置顶", self)
         # zd.setCheckable(True)
         # bar2.addAction(zd)
 
-        MainWindow.setMenuBar(self.menuBar)
-
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
 
-        self.groupBox = QGroupBox(MainWindow)
-        self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
-        self.groupBox.setAutoFillBackground(True)
-        self.groupBox.setTitle("选择套卡")
-
-        self.groupBox2 = QGroupBox(MainWindow)
-        self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
-        self.groupBox2.setAutoFillBackground(True)
-        self.groupBox2.setTitle("选择卡片")
-
-        self.setMineBox()  # 绘制我的卡箱
-        self.setFriendBox()  # 绘制卡友的换卡箱
-        self.setBtnStartSearch()  # 开始搜索
-
-        self.listBox = QListWidget(self.groupBox2)
-        self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
-        self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
-        # self.listBox.itemClicked.connect(self.handleCardSelect)
-        self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
-        # self.listBox.currentItemChanged.connect(self.handleCardSelect)
-
-        self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
-        self.pushButton = QtWidgets.QPushButton(self.groupBox)
-        self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
-        self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
-        self.pushButton.setCheckable(True)
-        self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
-
-        self.comboBox = QComboBox(self.groupBox)
-        self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
-
-        self.themesList = [
-            {"id": 1, "label": "发行", "type": [0, 2]},
-            {"id": 2, "label": "下架", "type": [1, 5]},
-            {"id": 3, "label": "闪卡", "type": [9]},
-        ]
-        self.currentTheme = self.themesList[0]
-
-        for item in self.themesList:
-            self.comboBox.addItem(item["label"])
-
-        self.treeWidget = QTreeWidget(self.groupBox)
-        self.treeWidget.setGeometry(QtCore.QRect(5, 75, 160, 265))
-        self.treeWidget.setHeaderLabels(['套卡名称'])
-        self.treeWidget.clicked.connect(self.handleThemeSelect)
-        self.setThemeList()
-        self.comboBox.currentIndexChanged.connect(self.onTabWidgetClicked)
-        self.groupBox.raise_()
-        self.menuBar.raise_()
-
-        # self.menuIfover = QMenu(self.menuBar)
-        # self.menuIfover.setTitle("Ifover")
-        #
-        # self.cb1 = QCheckBox('全选')
-        # # self.check_1.setTitle('置顶')
-        #
-        #
-        # self.menuBar.addAction(self.menuIfover.menuAction())
-        # self.menuBar.addAction(self.cb1)
-
-        self.statusBar.showMessage("ready!")
         MainWindow.setStatusBar(self.statusBar)
-
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        # self.tool = Tools()
+
+        # print(tool.__dict__)
+        # while not tool.isLogined:
+
+        # self.init()
+        self.isLogined()
+        #     r = tool.post(params=mCardUserMainPage, data=mCardUserMainPageData)
+        #     if r.text.find('code="0"') == -1:
+        #         print('error')
+
+    def isLogined(self):
+        if not self.tool.isLogined:
+            bar1 = self.menuBar.addAction('登录')
+            # bar1.addAction('New')
+            bar1.triggered.connect(self.handleLogin)
+
+            MainWindow.setMenuBar(self.menuBar)
+
+            self.labelStatusStr = QLabel()
+            # self.statusBar.addPermanentWidget(QLabel('状态：'), stretch=4)
+            self.statusBar.addPermanentWidget(self.labelStatusStr, stretch=4)
+            self.labelStatusStr.setText("请先登录")
+
+    def init(self, data):
+
+        if data["code"] == 0:
+            self.labelStatusStr.setText("登录成功，正在初始化数据")
+            self.tool.cookies = data['data']['cookies']
+
+            # region 初始化字典
+            cardInfoV3 = self.tool.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
+            xmlStr = cardInfoV3.content.decode()
+            xmlStr = xmlStr.replace("&", "&amp;")
+            root = ElementTree.XML(xmlStr)
+
+            cards = root.findall("card")
+            themes = root.findall("theme")
+            for card in cards:
+                rootCardDict[card.attrib["id"]] = {
+                    "id": card.attrib["id"],
+                    "themeId": card.attrib["theme_id"],
+                    "cardName": card.attrib["name"],
+                    "price": card.attrib["price"],
+                }
+
+            for theme in themes:
+                rootThemeDict[theme.attrib["id"]] = {
+                    "id": theme.attrib["id"],
+                    "themeName": theme.attrib["name"],
+                    "diff": theme.attrib["diff"],
+                }
+            # endregion
+
+
+            self.groupBox = QGroupBox(MainWindow)
+            self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
+            self.groupBox.setAutoFillBackground(True)
+            self.groupBox.setTitle("选择套卡")
+
+            self.groupBox2 = QGroupBox(MainWindow)
+            self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
+            self.groupBox2.setAutoFillBackground(True)
+            self.groupBox2.setTitle("选择卡片")
+
+            self.setMineBox()  # 绘制我的卡箱
+            self.setFriendBox()  # 绘制卡友的换卡箱
+            self.setBtnStartSearch()  # 开始搜索
+
+            self.listBox = QListWidget(self.groupBox2)
+            self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
+            self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
+            # self.listBox.itemClicked.connect(self.handleCardSelect)
+            self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
+            # self.listBox.currentItemChanged.connect(self.handleCardSelect)
+
+            self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
+            self.pushButton = QtWidgets.QPushButton(self.groupBox)
+            self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
+            self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+            self.pushButton.setCheckable(True)
+            self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
+
+            self.comboBox = QComboBox(self.groupBox)
+            self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
+
+            self.themesList = [
+                {"id": 1, "label": "发行", "type": [0, 2]},
+                {"id": 2, "label": "下架", "type": [1, 5]},
+                {"id": 3, "label": "闪卡", "type": [9]},
+            ]
+            self.currentTheme = self.themesList[0]
+
+            for item in self.themesList:
+                self.comboBox.addItem(item["label"])
+
+            self.treeWidget = QTreeWidget(self.groupBox)
+            self.treeWidget.setGeometry(QtCore.QRect(5, 75, 160, 265))
+            self.treeWidget.setHeaderLabels(['套卡名称'])
+            self.treeWidget.clicked.connect(self.handleThemeSelect)
+            self.setThemeList()
+            self.comboBox.currentIndexChanged.connect(self.onTabWidgetClicked)
+            self.groupBox.raise_()
+            self.menuBar.raise_()
+
+
+            self.labelStatusStr.setText("初始化成功~")
+
+    def handleLogin(self):
+        self.labelStatusStr.setText("正在加载登录窗口~")
+        self.my_login = LoginWeb()
+        self.my_login.my_signal.connect(self.init)
+        self.my_login.start()
 
     # 绘制 - 我的卡箱
     def setMineBox(self):
@@ -224,8 +278,8 @@ class Ui_MainWindow(object):
     def loadMineBox(self):
 
         self.treeMineBox.clear()
-        userInfoRes = Tools.post(url=baseUrl, params=mCardUserMainPage,
-                                 data=mCardUserMainPageData)
+        userInfoRes = tool.post(url=baseUrl, params=mCardUserMainPage,
+                                data=mCardUserMainPageData)
         etXml = ElementTree.XML(userInfoRes.text)
 
         userInfo = etXml.find("user")
@@ -284,8 +338,8 @@ class Ui_MainWindow(object):
             "uin": 1224842990,
             "opuin": self.opuin
         }
-        userInfoRes = Tools.post(url=baseUrl, params=mCardUserMainPage,
-                                 data=data)
+        userInfoRes = tool.post(url=baseUrl, params=mCardUserMainPage,
+                                data=data)
 
         etXml = ElementTree.XML(userInfoRes.text)
 
@@ -408,7 +462,7 @@ class Ui_MainWindow(object):
             "uin": 1224842990,
             "frnd": self.opuin
         }
-        r = Tools.post(params=params, data=data)
+        r = tool.post(params=params, data=data)
         print(r.text)
         etXml = ElementTree.XML(r.text)
         code = etXml.attrib['code']
@@ -513,7 +567,7 @@ class Ui_MainWindow(object):
         data = {
             "uin": self.uin,
         }
-        res = Tools.post(url="https://card.qzone.qq.com/cgi-bin/card_mini_get", data=data)
+        res = tool.post(url="https://card.qzone.qq.com/cgi-bin/card_mini_get", data=data)
         etXml = ElementTree.XML(res.text)
         Nodes = etXml.findall("Node")
         getThemeList = []
@@ -622,61 +676,60 @@ rootCardDict = {}
 rootThemeDict = {}
 
 if __name__ == '__main__':
-    r = Tools.post(params=mCardUserMainPage, data=mCardUserMainPageData)
+    isLogined = True
+    tool = Tools()
 
-    if r.text.find('code="0"') > 0:
-        # region 初始化字典
-        cardInfoV3 = Tools.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
-        xmlStr = cardInfoV3.content.decode()
-        xmlStr = xmlStr.replace("&", "&amp;")
-        root = ElementTree.XML(xmlStr)
+    app = QApplication(sys.argv)
+    MainWindow = QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
 
-        cards = root.findall("card")
-        themes = root.findall("theme")
-        for card in cards:
-            rootCardDict[card.attrib["id"]] = {
-                "id": card.attrib["id"],
-                "themeId": card.attrib["theme_id"],
-                "cardName": card.attrib["name"],
-                "price": card.attrib["price"],
-            }
+    '''
+    while not isLogined:
+        r = tool.post(params=mCardUserMainPage, data=mCardUserMainPageData)
+        if r.text.find('code="0"') == -1:
+            print('error')
+            driver = webdriver.Ie()
+            driver.set_window_size(800, 600)
+            driver.implicitly_wait(20)  # 隐性等待
+            driver.get(
+                "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
+            # time.sleep(3)
 
-        for theme in themes:
-            rootThemeDict[theme.attrib["id"]] = {
-                "id": theme.attrib["id"],
-                "themeName": theme.attrib["name"],
-                "diff": theme.attrib["diff"],
-            }
-        # endregion
+            try:
+                wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
 
-        app = QApplication(sys.argv)
-        MainWindow = QMainWindow()
-        ui = Ui_MainWindow()
-        ui.setupUi(MainWindow)
-        MainWindow.show()
-        sys.exit(app.exec_())
-    else:
-        print('error')
-        # from WebLogin import LoginWeb
+                if wait_process:
+                    c = driver.get_cookies()
+                    cookies = {}
+                    for cookie in c:
+                        if cookie['name'] in ['uin', 'skey']:
+                            cookies[cookie['name']] = cookie['value']
+                    tool.cookies = cookies
+                    tool.uin = cookies["uin"][1:]
+                    # print(tool.uin)
 
-        # app2 = QApplication(sys.argv)
-        # w = LoginWeb()
-        # w.show()
-        # sys.exit(app2.exec_())
-        driver = webdriver.Ie()
-        # driver = webdriver.PhantomJS()
-        driver.set_window_size(800, 600)
-        # driver.implicitly_wait(8)
+                    isLogined = True
+                    print(1)
 
-        driver.get("https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
-        # driver.quit()
-        time.sleep(5)
-        # driver.refresh()
-        c = driver.get_cookies()
-        # print(c)
-        cookies = {}
-        # 获取cookie中的name和value,转化成requests可以使用的形式
-        for cookie in c:
-            cookies[cookie['name']] = cookie['value']
-        print(cookies)
-        # https://zhuanlan.zhihu.com/p/38900589
+
+            except Exception as e:
+                print(e)
+                sys.exit()
+
+            finally:
+                driver.quit()
+                print(2)
+
+            # WebDriverWait(driver, 60).until_not(alert_or_relogin())
+
+            # isLoginSusccess = False
+            # while not isLoginSusccess:
+            #     element =
+            #     print(element)
+
+            #
+'''
+    # if isLogined:

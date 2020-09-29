@@ -4,7 +4,7 @@ from xml.etree import ElementTree
 import threading
 import queue
 import winsound
-import mcInfo
+# import mcInfo
 
 
 def searchCard(id, userList, q):

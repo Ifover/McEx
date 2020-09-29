@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 import threading
-import Tools
+from Tools import Tools
 import sys
 import time
 
@@ -15,6 +15,7 @@ class SearchCard(threading.Thread):
         self.findCards = args[4]
 
     def run(self):
+        tool = Tools()
         # print("开启线程：" + str(len(self.userList)))
         # self.searchCard(self.threadID, self.userList, self.q)
         # print("退出线程：" + str(len(self.userList)))
@@ -27,11 +28,11 @@ class SearchCard(threading.Thread):
         for opuin in self.userList:
             if not self._self.exitFlag:
                 mCardUserMainPageData = {
-                    "uin": 1224842990,
+                    "uin": tool.uin,
                     "opuin": opuin
                 }
 
-                r = Tools.post(params=mCardUserMainPage,
+                r = tool.post(params=mCardUserMainPage,
                                data=mCardUserMainPageData)
                 root = ElementTree.XML(r.text)
                 # 有时候可能会请求失败
@@ -48,7 +49,7 @@ class SearchCard(threading.Thread):
                 for card in changeBoxsCards:
 
                     # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
-                    if(card.attrib["id"] in self._self.findCards and card.attrib["unlock"] == '0'):
+                    if (card.attrib["id"] in self._self.findCards and card.attrib["unlock"] == '0'):
                         # print(card.attrib["unlock"])
 
                         self._self.opuinStr = opuin

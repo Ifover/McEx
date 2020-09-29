@@ -18,3 +18,4 @@ for cookie in c:
     cookies[cookie['name']] = cookie['value']
 print(cookies)
 # https://zhuanlan.zhihu.com/p/38900589
+driver.quit()
