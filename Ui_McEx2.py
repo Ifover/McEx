@@ -49,39 +49,6 @@ class Ui_MainWindow(object):
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 20))
 
-        self.groupBox = QGroupBox(self.MainWindow)
-        self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
-        self.groupBox.setAutoFillBackground(True)
-        self.groupBox.setTitle("选择套卡")
-
-        self.groupBox2 = QGroupBox(self.MainWindow)
-        self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
-        self.groupBox2.setAutoFillBackground(True)
-        self.groupBox2.setTitle("选择卡片")
-
-
-
-        self.listBox = QListWidget(self.groupBox2)
-        self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
-        self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
-        self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
-
-        self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
-        self.pushButton = QtWidgets.QPushButton(self.groupBox)
-        self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
-        self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
-        self.pushButton.setCheckable(True)
-        self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
-
-        self.comboBox = QComboBox(self.groupBox)
-        self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
-
-        self.themesList = [
-            {"id": 1, "label": "发行", "type": [0, 2]},
-            {"id": 2, "label": "下架", "type": [1, 5]},
-            {"id": 3, "label": "闪卡", "type": [9]},
-        ]
-
         # bar2 = self.menuBar.addMenu('设置')
         # zd = bar2.addAction('置顶')
         # zd.setCheckable(True)
@@ -103,19 +70,20 @@ class Ui_MainWindow(object):
         # while not tool.isLogined:
 
         self.isLogined()
-        # self.init({
-        #     "code": 0,
-        #     "data": {
-        #         "cookies": {
-        #             "skey": "@zQBSjZel8",
-        #             "uin": "o1224842990"
-        #         },
-        #         "uin": 1224842990
-        #     }
-        # })
+        self.init({
+            "code": 0,
+            "data": {
+                "cookies": {
+                    "skey": "@hZDfTGdXv",
+                    "uin": "o1224842990"
+                },
+                "uin": 1224842990
+            }
+        })
 
     def isLogined(self):
         gol._init()
+        print(gol.get_value("isLogined"))
         if not gol.get_value("isLogined"):
             bar1 = self.menuBar.addAction('登录')
             # bar1.addAction('New')
@@ -135,6 +103,7 @@ class Ui_MainWindow(object):
             gol.set_value("cookies", data['data']['cookies'])
             gol.set_value("uin", data['data']['uin'])
             self.uin = data['data']['uin']
+            self.tool.uin = data['data']['uin']
             # self.tool.cookies = data['data']['cookies']
 
             # region 初始化字典
@@ -160,10 +129,38 @@ class Ui_MainWindow(object):
                     "diff": theme.attrib["diff"],
                 }
             # endregion
+            self.groupBox = QGroupBox(MainWindow)
+            self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
+            self.groupBox.setAutoFillBackground(True)
+            self.groupBox.setTitle("选择套卡")
 
-            print(33)
-            self.setMineBox()  # 绘制我的卡箱
-            self.setFriendBox()  # 绘制卡友的换卡箱
+            self.groupBox2 = QGroupBox(MainWindow)
+            self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
+            self.groupBox2.setAutoFillBackground(True)
+            self.groupBox2.setTitle("选择卡片")
+
+            self.listBox = QListWidget(self.groupBox2)
+            self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
+            self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
+
+            self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
+            self.pushButton = QtWidgets.QPushButton(self.groupBox)
+            self.pushButton.setGeometry(QtCore.QRect(170, 10, 30, 331))
+            self.pushButton.setText(">\n>\n>\n>\n>\n>\n>\n选\n择\n套\n卡\n>\n>\n>\n>\n>\n>\n>")
+            self.pushButton.setCheckable(True)
+            self.pushButton.clicked.connect(self.btnSelectThemeShowHide)
+            self.pushButton.show()
+
+            self.comboBox = QComboBox(self.groupBox)
+            self.comboBox.setGeometry(QtCore.QRect(5, 50, 160, 20))
+
+            self.themesList = [
+                {"id": 1, "label": "发行", "type": [0, 2]},
+                {"id": 2, "label": "下架", "type": [1, 5]},
+                {"id": 3, "label": "闪卡", "type": [9]},
+            ]
+
             self.setBtnStartSearch()  # 开始搜索
 
             self.currentTheme = self.themesList[0]
@@ -175,8 +172,12 @@ class Ui_MainWindow(object):
             self.treeWidget.setGeometry(QtCore.QRect(5, 75, 160, 265))
             self.treeWidget.setHeaderLabels(['套卡名称'])
             self.treeWidget.clicked.connect(self.handleThemeSelect)
-            self.setThemeList()
             self.comboBox.currentIndexChanged.connect(self.onTabWidgetClicked)
+
+            self.setMineBox()  # 绘制我的卡箱
+            self.setFriendBox()  # 绘制卡友的换卡箱
+            self.setThemeList()
+
             self.groupBox.raise_()
             self.menuBar.raise_()
 
@@ -185,17 +186,20 @@ class Ui_MainWindow(object):
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")
         self.my_login = LoginWeb()
-        self.my_login.my_signal.connect( self.init)
+        self.my_login.my_signal.connect(self.init)
         self.my_login.start()
+        self.my_login.exec()
 
     # 绘制 - 我的卡箱
     def setMineBox(self):
+        print("开始绘制我的卡箱")
         self.groupMineBox = QGroupBox(MainWindow)
         self.groupMineBox.setGeometry(QtCore.QRect(240, 28, 270, 345))
         self.groupMineBox.setAutoFillBackground(True)
         self.groupMineBox.setTitle("****.卡箱")
         # self.groupMineBox.setCheckable(False)
         self.groupMineBox.clicked.connect(self.loadMineBox)
+        self.groupMineBox.show()
 
         self.treeMineBox = QTreeWidget(self.groupMineBox)
         self.treeMineBox.setGeometry(QtCore.QRect(5, 18, 260, 295))
@@ -208,10 +212,12 @@ class Ui_MainWindow(object):
         self.treeMineBox.clicked.connect(self.treeMineBoxClick)
         # self.treeMineBox.itemChanged.connect(self.handleChanged)
         self.treeMineBox.setRootIsDecorated(False)  # 隐藏箭头
+        self.treeMineBox.show()
 
         self.layoutWidget = QWidget(self.groupMineBox)
         self.layoutWidget.setGeometry(QtCore.QRect(0, 305, 271, 34))
         self.layoutWidget.setObjectName("layoutWidget")
+        self.layoutWidget.show()
 
         self.gridLayout = QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(5, 10, 5, 5)
@@ -223,20 +229,25 @@ class Ui_MainWindow(object):
         self.btnMineBuy.setText("买")
         self.btnMineBuy.setEnabled(False)
         self.btnMineBuy.setMinimumSize(QtCore.QSize(32, 24))
+        self.btnMineBuy.show()
         self.gridLayout.addWidget(self.btnMineBuy, 0, 0, 1, 1)
 
         self.btnMineSell = QPushButton(self.layoutWidget)
         self.btnMineSell.setText("卖")
         self.btnMineSell.setEnabled(False)
         self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
+        self.btnMineSell.show()
         self.gridLayout.addWidget(self.btnMineSell, 0, 1, 1, 1)
 
         self.btnMineReload = QPushButton(self.layoutWidget)
         self.btnMineReload.setText("刷")
         self.btnMineReload.setMinimumSize(QtCore.QSize(32, 24))
         self.btnMineReload.clicked.connect(self.loadMineBox)
+        self.btnMineReload.show()
         self.gridLayout.addWidget(self.btnMineReload, 0, 3, 1, 1)
+        # self.gridLayout.show()
 
+        print("结束绘制我的卡箱")
         self.loadMineBox()
 
     # 绘制 - 卡友卡箱
@@ -289,7 +300,7 @@ class Ui_MainWindow(object):
     def loadMineBox(self):
 
         self.treeMineBox.clear()
-        userInfoRes = tool.post(params=mCardUserMainPage,
+        userInfoRes = self.tool.post(params=mCardUserMainPage,
                                 data=mCardUserMainPageData)
         etXml = ElementTree.XML(userInfoRes.text)
 
@@ -346,10 +357,10 @@ class Ui_MainWindow(object):
     def loadFriendBox(self):
         self.treeFriendBox.clear()
         data = {
-            "uin": 1224842990,
+            "uin": self.uin,
             "opuin": self.opuin
         }
-        userInfoRes = tool.post(url=baseUrl, params=mCardUserMainPage,
+        userInfoRes = self.tool.post( params=mCardUserMainPage,
                                 data=data)
 
         etXml = ElementTree.XML(userInfoRes.text)
@@ -441,13 +452,13 @@ class Ui_MainWindow(object):
 
     # 开始搜索
     def btnStartSearch(self):
-        # print(self.isStart)
+        # print(self.themeId, self.selectCardList)
         if not self.isStart:
             self.isStart = True
             self.btnSearch.setText("停")
             MainWindow.resize(515, 400)
             MainWindow.setFixedSize(515, 400)
-            self.thread = SearchUser(self.themeId, self.selectCardList)
+            self.thread = SearchUser(self.themeId, self.selectCardList, self.tool)
             self.thread.sec_changed_signal.connect(self.updateStatusBar)
             self.thread.theCardIsSearched.connect(self.cardSearched)
             self.thread.start()
@@ -569,8 +580,11 @@ class Ui_MainWindow(object):
 
     # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):
-        self.statusBar.showMessage('搜索中... [{0}]'.format(num))
-        self.statusBar.setStyleSheet("QWidget{color: #333333}")
+        print(num)
+        self.labelStatusStr.setText('搜索中... [{0}]'.format(num))
+
+        # self.statusBar.showMessage('搜索中... [{0}]'.format(num))
+        # self.statusBar.setStyleSheet("QWidget{color: #333333}")
         # print('\rsearching... Times:{0}'.format(num), end='')
 
     # 绘制 - 套卡容器
@@ -578,7 +592,7 @@ class Ui_MainWindow(object):
         data = {
             "uin": self.uin,
         }
-        res = tool.post(url="https://card.qzone.qq.com/cgi-bin/card_mini_get", data=data)
+        res = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_mini_get", data=data)
         etXml = ElementTree.XML(res.text)
         Nodes = etXml.findall("Node")
         getThemeList = []
@@ -610,7 +624,7 @@ class Ui_MainWindow(object):
         if i.text(1):  # 获取选择套卡的themeId
             self.themeId = i.text(1)
             self.currentCards = []
-            for card in cards:
+            for card in self.cards:
                 if card.attrib['theme_id'] == i.text(1):
                     self.currentCards.append({
                         "id": card.attrib['id'],
@@ -688,7 +702,7 @@ rootThemeDict = {}
 
 if __name__ == '__main__':
     isLogined = True
-    tool = Tools()
+    # tool = Tools()
 
     app = QApplication(sys.argv)
     MainWindow = QMainWindow()

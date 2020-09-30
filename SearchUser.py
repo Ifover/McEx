@@ -13,65 +13,67 @@ class SearchUser(QThread):
 
     def __init__(self, *args):
         super().__init__()
+
         self.opuinStr = ""
         self.times = 0
         self.exitFlag = False  # 找到了就会变成True
         self.isExch = True  # 跳过有要求的卡友
         self.tid = args[0]
         self.findCards = args[1]  # 要找寻的卡片ID
-        print(args[1])
+        self.tool = args[2]  # 要找寻的卡片ID
+        # print(args)
 
     def run(self):
-        tool = Tools()
-        while (not self.exitFlag):
-            try:
-                mCardUserThemeList = {
-                    "cmd": "card_user_theme_list",
-                    "h5ver": 1,
-                    "uin": tool.uin,
-                    "tid": int(self.tid),  # 卡友正在练的套卡ID
-                }
-                res = tool.post(url=baseUrl, params=mCardUserThemeList)
-                root = ElementTree.XML(res.text)
-                nodeList = root.findall("node")
-                usersList = []
+        # tool = Tools()
+        while not self.exitFlag:
+            mCardUserThemeList = {
+                "cmd": "card_user_theme_list",
+                "h5ver": 1,
+                "uin": self.tool.uin,
+                "tid": int(self.tid),  # 卡友正在练的套卡ID
+            }
 
-                for uin in nodeList:
-                    uins = uin.attrib["uin"]
-                    userList = uins.split('|')
-                    userList = [i for i in userList if i != '']  # 去除空
-                    self.times += len(userList)
-                    usersList.append(userList)
+            res = self.tool.post(params=mCardUserThemeList)
+            # print(res)
+            root = ElementTree.XML(res.text)
+            nodeList = root.findall("node")
+            usersList = []
 
-                self.sec_changed_signal.emit(self.times)
-                workQueue = queue.Queue(len(usersList))
+            for uin in nodeList:
+                uins = uin.attrib["uin"]
+                userList = uins.split('|')
+                userList = [i for i in userList if i != '']  # 去除空
+                self.times += len(userList)
+                usersList.append(userList)
 
-                threads = []
-                threadID = 1
-                # 填充队列
-                for index in range(len(usersList)):
-                    workQueue.put(index)
-                # 创建新线程
-                for userList in usersList:
-                    thread = SearchCard(
-                        self, threadID, userList, workQueue, self.findCards)
-                    # thread = searchCard(self, threadID, userList, workQueue)
-                    thread.start()
-                    threads.append(thread)
-                    threadID += 1
-                # 等待队列清空
-                # while not workQueue.empty():
-                #     pass
+            self.sec_changed_signal.emit(self.times)
+            workQueue = queue.Queue(len(usersList))
 
-                # 通知线程是时候退出
-                # exitFlag = 1
-                # 等待所有线程完成
-                for t in threads:
-                    t.join()
-                # return opuinStr
-                # print("退出主线程")
-            except:
-                pass
+            threads = []
+            threadID = 1
+            # 填充队列
+            for index in range(len(usersList)):
+                workQueue.put(index)
+            # 创建新线程
+            for userList in usersList:
+                thread = SearchCard(
+                    self, threadID, userList, workQueue, self.findCards)
+                # thread = searchCard(self, threadID, userList, workQueue)
+                thread.start()
+                threads.append(thread)
+                threadID += 1
+            # 等待队列清空
+            # while not workQueue.empty():
+            #     pass
+
+            # 通知线程是时候退出
+            # exitFlag = 1
+            # 等待所有线程完成
+            for t in threads:
+                t.join()
+            # return opuinStr
+            # print("退出主线程")
+
 
         if len(self.opuinStr) > 0:
             self.theCardIsSearched.emit(self.getOpuinStr())

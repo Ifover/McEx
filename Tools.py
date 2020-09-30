@@ -17,18 +17,19 @@ session = requests.session()
 
 class Tools:
     baseUrl = 'https://mfkp.qq.com/cardshow'
+    uin = ''
 
     # def __init__(self):
 
     #     isLogined = False
     #     cookies = {}
-    #     uin = ''
+    #
 
     def post(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
         cookies = gol.get_value("cookies")
         # print(self.baseUrl)
-        print(cookies)
+        # print(cookies)
 
         try:
             r = requests.post(url=url, data=data, params=params, cookies=cookies)
