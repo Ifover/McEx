@@ -34,7 +34,6 @@ class Ui_MainWindow(object):
         self.opuin = ''
         self.uin = ""
         self.isExch = True
-        self.tool = Tools()
 
         # super().__init__()
 
@@ -57,7 +56,7 @@ class Ui_MainWindow(object):
         # zd = QAction("置顶", self)
         # zd.setCheckable(True)
         # bar2.addAction(zd)
-
+        self.labelStatusStr = QLabel()
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
@@ -70,19 +69,11 @@ class Ui_MainWindow(object):
         # while not tool.isLogined:
 
         self.isLogined()
-        self.init({
-            "code": 0,
-            "data": {
-                "cookies": {
-                    "skey": "@hZDfTGdXv",
-                    "uin": "o1224842990"
-                },
-                "uin": 1224842990
-            }
-        })
+        # self.init()
 
     def isLogined(self):
         gol._init()
+        self.tool = Tools()
         print(gol.get_value("isLogined"))
         if not gol.get_value("isLogined"):
             bar1 = self.menuBar.addAction('登录')
@@ -91,10 +82,18 @@ class Ui_MainWindow(object):
 
             MainWindow.setMenuBar(self.menuBar)
 
-            self.labelStatusStr = QLabel()
+
             # self.statusBar.addPermanentWidget(QLabel('状态：'), stretch=4)
             self.statusBar.addPermanentWidget(self.labelStatusStr, stretch=4)
             self.labelStatusStr.setText("请先登录")
+            return
+        self.init({
+            "code": 0,
+            "data": {
+                "cookies": gol.get_value('cookies'),
+                "uin": gol.get_value('cookies')['uin'][1:]
+            }
+        })
 
     def init(self, data):
         if data["code"] == 0:
@@ -102,6 +101,8 @@ class Ui_MainWindow(object):
 
             gol.set_value("cookies", data['data']['cookies'])
             gol.set_value("uin", data['data']['uin'])
+            self.tool.saveCookie()
+
             self.uin = data['data']['uin']
             self.tool.uin = data['data']['uin']
             # self.tool.cookies = data['data']['cookies']
@@ -133,16 +134,19 @@ class Ui_MainWindow(object):
             self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
             self.groupBox.setAutoFillBackground(True)
             self.groupBox.setTitle("选择套卡")
+            self.groupBox.show()
 
             self.groupBox2 = QGroupBox(MainWindow)
             self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
             self.groupBox2.setAutoFillBackground(True)
             self.groupBox2.setTitle("选择卡片")
+            self.groupBox2.show()
 
             self.listBox = QListWidget(self.groupBox2)
             self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
             self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
             self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
+            # self.listBox.show()
 
             self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
             self.pushButton = QtWidgets.QPushButton(self.groupBox)
@@ -301,7 +305,7 @@ class Ui_MainWindow(object):
 
         self.treeMineBox.clear()
         userInfoRes = self.tool.post(params=mCardUserMainPage,
-                                data=mCardUserMainPageData)
+                                     data=mCardUserMainPageData)
         etXml = ElementTree.XML(userInfoRes.text)
 
         userInfo = etXml.find("user")
@@ -360,8 +364,8 @@ class Ui_MainWindow(object):
             "uin": self.uin,
             "opuin": self.opuin
         }
-        userInfoRes = self.tool.post( params=mCardUserMainPage,
-                                data=data)
+        userInfoRes = self.tool.post(params=mCardUserMainPage,
+                                     data=data)
 
         etXml = ElementTree.XML(userInfoRes.text)
 
@@ -481,10 +485,10 @@ class Ui_MainWindow(object):
             "dst": '|'.join(self.slotFriend),
             "src": '|'.join(self.slotMine),
             "isFriend": 1,
-            "uin": 1224842990,
+            "uin": self.uin,
             "frnd": self.opuin
         }
-        r = tool.post(params=params, data=data)
+        r = self.tool.post(params=params, data=data)
         print(r.text)
         etXml = ElementTree.XML(r.text)
         code = etXml.attrib['code']

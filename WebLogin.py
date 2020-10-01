@@ -20,13 +20,15 @@ class LoginWeb(QThread):
     def run(self):
         driver = webdriver.Ie()
         driver.set_window_size(800, 600)
-        driver.implicitly_wait(20)  # 隐性等待
+        driver.implicitly_wait(9999)  # 隐性等待
         driver.get(
             "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
         # time.sleep(3)
 
         try:
-            wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
+            # wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
+            wait_process = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "ID_CARD_FLASH")))
 
             if wait_process:
                 c = driver.get_cookies()
@@ -51,12 +53,12 @@ class LoginWeb(QThread):
 
 
         except Exception as e:
-            print(e)
+            print("error:", e)
             self.my_signal.emit({
                 "code": -1,
                 "data": {}
             })
-            sys.exit()
+            # sys.exit()
 
         finally:
             print(2)
