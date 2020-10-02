@@ -4,10 +4,6 @@ import time
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
 
-from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 
 # import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -56,25 +52,26 @@ class Ui_MainWindow(object):
         # zd = QAction("置顶", self)
         # zd.setCheckable(True)
         # bar2.addAction(zd)
-        self.labelStatusStr = QLabel()
+        self.labelStatusStr = QLabel("xxxx")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
-
+        self.statusBar.addPermanentWidget(self.labelStatusStr, stretch=4)
+        #
         MainWindow.setStatusBar(self.statusBar)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        # self.tool = Tools()
 
-        # print(tool.__dict__)
-        # while not tool.isLogined:
+
+
 
         self.isLogined()
         # self.init()
 
     def isLogined(self):
         gol._init()
+        #
         self.tool = Tools()
-        print(gol.get_value("isLogined"))
+        # print(gol.get_value("isLogined"))
         if not gol.get_value("isLogined"):
             bar1 = self.menuBar.addAction('登录')
             # bar1.addAction('New')
@@ -82,9 +79,6 @@ class Ui_MainWindow(object):
 
             MainWindow.setMenuBar(self.menuBar)
 
-
-            # self.statusBar.addPermanentWidget(QLabel('状态：'), stretch=4)
-            self.statusBar.addPermanentWidget(self.labelStatusStr, stretch=4)
             self.labelStatusStr.setText("请先登录")
             return
         self.init({
@@ -145,8 +139,10 @@ class Ui_MainWindow(object):
             self.listBox = QListWidget(self.groupBox2)
             self.listBox.setGeometry(QtCore.QRect(5, 18, 170, 280))
             self.listBox.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.listBox.addItem('请选择套卡~~')
+            self.listBox.setEnabled(False)
             self.listBox.itemSelectionChanged.connect(self.handleCardSelect)
-            # self.listBox.show()
+            self.listBox.show()
 
             self.listView_Anim = QPropertyAnimation(self.groupBox, b"geometry")
             self.pushButton = QtWidgets.QPushButton(self.groupBox)
@@ -196,7 +192,7 @@ class Ui_MainWindow(object):
 
     # 绘制 - 我的卡箱
     def setMineBox(self):
-        print("开始绘制我的卡箱")
+
         self.groupMineBox = QGroupBox(MainWindow)
         self.groupMineBox.setGeometry(QtCore.QRect(240, 28, 270, 345))
         self.groupMineBox.setAutoFillBackground(True)
@@ -251,7 +247,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.btnMineReload, 0, 3, 1, 1)
         # self.gridLayout.show()
 
-        print("结束绘制我的卡箱")
+
         self.loadMineBox()
 
     # 绘制 - 卡友卡箱
@@ -355,7 +351,7 @@ class Ui_MainWindow(object):
 
         self.treeMineBox.expandAll()
 
-        self.statusBar.showMessage('刷新成功')
+        # self.statusBar.showMessage('刷新成功')
 
     # Load - 卡友
     def loadFriendBox(self):
@@ -404,6 +400,10 @@ class Ui_MainWindow(object):
             child.setText(2, cbCard['themeName'])
             child.setText(3, cbCard['cardId'] + '_' + cbCard['slot'] + '_0')
             child.setCheckState(0, Qt.Unchecked)
+            if cbCard['cardId'] in self.selectCardList and cbCard['unlock'] == '0':
+                child.setBackground(0, QColor(102,255,102))
+                child.setBackground(1, QColor(102,255,102))
+                child.setBackground(2, QColor(102,255,102))
             # child.setData(0, Qt.CheckStateRole, QVariant())
             child.setDisabled(cbCard['unlock'] != '0')
 
@@ -449,6 +449,7 @@ class Ui_MainWindow(object):
         self.btnSearch.setText("搜")
         self.btnSearch.setCheckable(True)
         self.btnSearch.setEnabled(False)
+        self.btnSearch.show()
 
         self.btnSearch.clicked.connect(self.btnStartSearch)
         # self.btnSearch.clicked.connect(lambda: self.btnStartSearch)
@@ -584,12 +585,7 @@ class Ui_MainWindow(object):
 
     # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):
-        print(num)
         self.labelStatusStr.setText('搜索中... [{0}]'.format(num))
-
-        # self.statusBar.showMessage('搜索中... [{0}]'.format(num))
-        # self.statusBar.setStyleSheet("QWidget{color: #333333}")
-        # print('\rsearching... Times:{0}'.format(num), end='')
 
     # 绘制 - 套卡容器
     def setThemeList(self):
@@ -643,6 +639,7 @@ class Ui_MainWindow(object):
                 self.item = QListWidgetItem(item['name'] + "[" + str(item['price']) + "]")
                 self.listBox.addItem(self.item)
                 # self.listBox.insertItem(0, self.item)
+            self.listBox.setEnabled(True)
             self.selectThemeHide()
             self.pushButton.toggle()
 
@@ -682,13 +679,6 @@ class Ui_MainWindow(object):
         print(checked)
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
-        # if checked:
-        #     self.setWindowFlags(
-        #         self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
-        # else:
-        #     self.setWindowFlags(
-        #         self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        # self.show()
 
 
 baseUrl = 'https://mfkp.qq.com/cardshow'
@@ -705,8 +695,7 @@ rootCardDict = {}
 rootThemeDict = {}
 
 if __name__ == '__main__':
-    isLogined = True
-    # tool = Tools()
+    #isLogined = True
 
     app = QApplication(sys.argv)
     MainWindow = QMainWindow()
@@ -714,51 +703,3 @@ if __name__ == '__main__':
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
-    '''
-    while not isLogined:
-        r = tool.post(params=mCardUserMainPage, data=mCardUserMainPageData)
-        if r.text.find('code="0"') == -1:
-            print('error')
-            driver = webdriver.Ie()
-            driver.set_window_size(800, 600)
-            driver.implicitly_wait(20)  # 隐性等待
-            driver.get(
-                "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
-            # time.sleep(3)
-
-            try:
-                wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
-
-                if wait_process:
-                    c = driver.get_cookies()
-                    cookies = {}
-                    for cookie in c:
-                        if cookie['name'] in ['uin', 'skey']:
-                            cookies[cookie['name']] = cookie['value']
-                    tool.cookies = cookies
-                    tool.uin = cookies["uin"][1:]
-                    # print(tool.uin)
-
-                    isLogined = True
-                    print(1)
-
-
-            except Exception as e:
-                print(e)
-                sys.exit()
-
-            finally:
-                driver.quit()
-                print(2)
-
-            # WebDriverWait(driver, 60).until_not(alert_or_relogin())
-
-            # isLoginSusccess = False
-            # while not isLoginSusccess:
-            #     element =
-            #     print(element)
-
-            #
-'''
-    # if isLogined:

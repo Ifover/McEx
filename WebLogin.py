@@ -5,7 +5,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
+# from selenium.webdriver.common.by import By
 
 
 # 先来个窗口
@@ -18,17 +18,18 @@ class LoginWeb(QThread):
         # self.setup()
 
     def run(self):
-        driver = webdriver.Ie()
+        driver = webdriver.Chrome()
+        # driver = webdriver.Ie()
         driver.set_window_size(800, 600)
-        driver.implicitly_wait(9999)  # 隐性等待
         driver.get(
             "https://xui.ptlogin2.qq.com/cgi-bin/xlogin?appid=1600000084&s_url=http%3A%2F%2Fappimg2.qq.com%2Fcard%2Findex_v3.html")
+
+        driver.implicitly_wait(10)  # 隐性等待
         # time.sleep(3)
 
         try:
-            # wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
-            wait_process = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, "ID_CARD_FLASH")))
+            wait_process = WebDriverWait(driver, 10, 0.1).until(EC.title_contains(u"魔法卡片"))
+            # wait_process = WebDriverWait(driver, 10).until_not(lambda driver: driver.find_element_by_id("login"))
 
             if wait_process:
                 c = driver.get_cookies()
@@ -39,7 +40,7 @@ class LoginWeb(QThread):
                 # tool.cookies = cookies
                 # tool.uin = cookies["uin"][1:]
                 # print(tool.uin)
-                driver.quit()
+
                 self.my_signal.emit({
                     "code": 0,
                     "data": {
@@ -61,4 +62,6 @@ class LoginWeb(QThread):
             # sys.exit()
 
         finally:
+            driver.quit()
+
             print(2)

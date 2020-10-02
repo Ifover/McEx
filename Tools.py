@@ -7,29 +7,27 @@ from xml.etree import ElementTree
 
 session = requests.session()
 
-
-# load_cookieJar = cookiejar.LWPCookieJar()
-# load_cookieJar.load('cookies.txt', ignore_discard=True, ignore_expires=True)
-# load_cookies = requests.utils.dict_from_cookiejar(load_cookieJar)
-# session.cookies = requests.utils.cookiejar_from_dict(load_cookies)
-
-# new_cookie_jar = cookiejar.LWPCookieJar('cookie.txt')
-# requests.utils.cookiejar_from_dict({c.name: c.value for c in session.cookies}, new_cookie_jar)
-# new_cookie_jar.save('cookies.txt', ignore_discard=True, ignore_expires=True)
-
 class Tools:
     baseUrl = 'https://mfkp.qq.com/cardshow'
     uin = ''
+    flag = False
 
     def __init__(self):
-        self.path = os.getenv("APPDATA") + r'\McEx\cookie.txt'
-        if not os.path.exists(self.path):
-            file = open(self.path, 'w')
-            file.write('')
-            file.close()
-            gol.set_value('isLogined', False)
-        else:
-            self.loadCookie()
+        if not Tools.flag:
+            self.path = os.getenv("APPDATA") + r'\McEx\cookie.txt'
+            if not os.path.exists(self.path):
+                os.mkdir(os.getenv("APPDATA") + r'\McEx')
+                with open(self.path, mode='w', encoding='utf-8') as fObject:
+                    fObject.write("#LWP-Cookies-2.0\n")
+                    fObject.write('Set-Cookie3: skey="@h"; path="/"; domain=""; path_spec; discard; HttpOnly=None; '
+                                  'version=0\n')
+                    fObject.write(
+                        'Set-Cookie3: uin=o1; path="/"; domain=""; path_spec; discard; HttpOnly=None; version=0\n')
+                gol.set_value('isLogined', False)
+            else:
+                self.loadCookie()
+            Tools.flag = True
+
         # isLogined = False
         # cookies = {}
 
@@ -48,7 +46,7 @@ class Tools:
         res = self.post(params=params, data=data)
         root = ElementTree.XML(res.text)
         if root.attrib["code"] == '0':
-            print('Token有效')
+            print('Token-有效')
             gol.set_value('isLogined', True)
 
     def saveCookie(self):
@@ -57,13 +55,11 @@ class Tools:
         requests.utils.cookiejar_from_dict({c: str(cookies[c]) for c in cookies}, new_cookie_jar)
         new_cookie_jar.save(self.path, ignore_discard=True, ignore_expires=True)
 
-        print('保存成功')
+        print('Token-保存成功')
 
     def post(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
         cookies = gol.get_value("cookies")
-        # print(self.baseUrl)
-        # print(cookies)
 
         try:
             r = requests.post(url=url, data=data, params=params, cookies=cookies)
