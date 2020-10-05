@@ -11,16 +11,16 @@ class SearchUser(QThread):
     sec_changed_signal = pyqtSignal(int)  # 信号类型：int
     theCardIsSearched = pyqtSignal(str)  # 信号类型：str
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         super().__init__()
-
         self.opuinStr = ""
         self.times = 0
         self.exitFlag = False  # 找到了就会变成True
-        self.isExch = True  # 跳过有要求的卡友
-        self.tid = args[0]
-        self.findCards = args[1]  # 要找寻的卡片ID
-        self.tool = args[2]  # 要找寻的卡片ID
+        self.tid = kwargs['themeId']
+        self.findCards = kwargs['selectCardList']  # 要找寻的卡片ID
+        self.tool = kwargs['tool']  # 要找寻的卡片ID
+        self.isExch = kwargs['isExch']  # 跳过有要求的卡友
+
         # print(args)
 
     def run(self):
@@ -34,7 +34,7 @@ class SearchUser(QThread):
             }
 
             res = self.tool.post(params=mCardUserThemeList)
-            # print(res)
+            print(res.text)
             root = ElementTree.XML(res.text)
             nodeList = root.findall("node")
             usersList = []
@@ -73,7 +73,6 @@ class SearchUser(QThread):
                 t.join()
             # return opuinStr
             # print("退出主线程")
-
 
         if len(self.opuinStr) > 0:
             self.theCardIsSearched.emit(self.getOpuinStr())

@@ -6,6 +6,7 @@ from http import cookiejar
 from xml.etree import ElementTree
 
 session = requests.session()
+session.keep_alive = False
 
 class Tools:
     baseUrl = 'https://mfkp.qq.com/cardshow'
@@ -65,8 +66,8 @@ class Tools:
             r = requests.post(url=url, data=data, params=params, cookies=cookies)
             r.keep_alive = False
             return r
-        except ConnectionError:
-            print(ConnectionError)
+        except ConnectionResetError:
+            print(ConnectionResetError)
 
     def get(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
