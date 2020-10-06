@@ -65,7 +65,6 @@ class Ui_MainWindow(object):
         gol._init()
         #
         self.tool = Tools()
-        # print(gol.get_value("isLogined"))
         if not gol.get_value("isLogined"):
             bar1 = self.menuBar.addAction('登录')
             # bar1.addAction('New')
@@ -511,6 +510,8 @@ class Ui_MainWindow(object):
         self.checkExch.setText('跳过要求')
         self.checkExch.setEnabled(False)
         self.checkExch.stateChanged.connect(self.handleCheckChange)
+        self.checkExch.show()
+
         self.gridLayout_2.addWidget(self.checkExch, 0, 0, 1, 1)
 
         # self.checkTop = QtWidgets.QCheckBox(self.gridLayoutWidget)
@@ -523,6 +524,7 @@ class Ui_MainWindow(object):
         self.btnReloadCardList.setMinimumSize(QtCore.QSize(0, 18))
         self.btnReloadCardList.setStyleSheet("font-size:10px;")
         self.btnReloadCardList.setEnabled(False)
+        self.btnReloadCardList.show()
         self.btnReloadCardList.clicked.connect(lambda: self.handleThemeSelect('reload'))
         self.gridLayout_2.addWidget(self.btnReloadCardList, 1, 0, 1, 1)
 
@@ -532,18 +534,17 @@ class Ui_MainWindow(object):
         self.btnSearch.setCheckable(True)
         self.btnSearch.setEnabled(False)
         self.btnSearch.clicked.connect(self.btnStartSearch)
+        self.btnSearch.show()
         self.gridLayout_2.addWidget(self.btnSearch, 0, 1, 1, 1)
 
     def handleCheckChange(self, status):
         self.isExch = status == 2
-        print(status)
 
     def handleMineSell(self):
         print(self.cardsMine)
 
     # 开始搜索
     def btnStartSearch(self):
-        # print(self.themeId, self.selectCardList)
         if not self.isStart:
             self.isStart = True
             self.opuin = ''
@@ -580,7 +581,6 @@ class Ui_MainWindow(object):
             "frnd": self.opuin
         }
         r = self.tool.post(params=params, data=data)
-        print(r.text)
         etXml = ElementTree.XML(r.text)
         code = etXml.attrib['code']
         w = QWidget()
@@ -598,8 +598,6 @@ class Ui_MainWindow(object):
     # 计算 双方已选择卡片
     def componendNumPrise(self):
         if self.opuin:
-            # print(len(self.cardsMine), sum(self.cardsMine))
-            # print(len(self.cardsFriend), sum(self.cardsFriend))
             str = "已选择{l1}张，共{l2}面值的卡片 已选择{r1}张，共{r2}面值的卡片".format(
                 l1=len(self.cardsMine),
                 l2=sum(self.cardsMine),
@@ -627,7 +625,6 @@ class Ui_MainWindow(object):
         self.slotMine = []
 
         iterator = QTreeWidgetItemIterator(self.treeMineBox)
-        # print(iterator.value())
         while iterator.value():
             item = iterator.value()
             if item.checkState(0) == Qt.Checked:
@@ -635,7 +632,6 @@ class Ui_MainWindow(object):
                 self.slotMine.append(item.text(3))
             iterator.__iadd__(1)
         self.componendNumPrise()
-        # print("cardsMine", self.cardsMine)
 
     # 卡友卡箱 - 点击
     def treeFriendBoxClick(self):
@@ -651,7 +647,6 @@ class Ui_MainWindow(object):
 
             iterator.__iadd__(1)
         self.componendNumPrise()
-        # print("cardsFriend", self.cardsFriend)
 
     # 找到卡了
     def cardSearched(self, opuin):
@@ -759,12 +754,10 @@ class Ui_MainWindow(object):
                 id = item.attrib["id"]
                 if int(id) > 0:  # 跳过一些莫名其妙的卡
                     newList.append(id)
-            # print(newList)
             for item in self.currentCards:
                 num = "【{i}】".format(i=newList.count(item["id"]))
                 self.item = QListWidgetItem(num + item['name'] + "[" + str(item['price']) + "]")
                 # self.item.setSelected( item['id'] in self.selectCardList)
-                print(item['id'], self.selectCardList)
                 self.item.setSelected(True)
                 self.listBox.addItem(self.item)
                 # self.listBox.insertItem(0, self.item)
@@ -777,8 +770,6 @@ class Ui_MainWindow(object):
                 # if len(self.selectCardList) > 0:
                 #     self.btnSearch.setEnabled(True)
             # for i in range(self.listBox.count()):
-            #     print(self.listBox.item(i).text())
-            # print(self.currentCards[self.listBox.item(i)]['id'])
             self.listBox.setEnabled(True)
             self.btnReloadCardList.setEnabled(True)
 
@@ -815,7 +806,6 @@ class Ui_MainWindow(object):
 
     # 切换套卡类型
     def onTabWidgetClicked(self, i):
-        # print(i)
         self.currentTheme = self.themesList[i]
         self.setThemeList()
 

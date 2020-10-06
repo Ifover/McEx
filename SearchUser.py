@@ -21,7 +21,6 @@ class SearchUser(QThread):
         self.tool = kwargs['tool']  # 要找寻的卡片ID
         self.isExch = kwargs['isExch']  # 跳过有要求的卡友
 
-        # print(args)
 
     def run(self):
         # tool = Tools()
@@ -34,7 +33,6 @@ class SearchUser(QThread):
             }
 
             res = self.tool.post(params=mCardUserThemeList)
-            print(res.text)
             root = ElementTree.XML(res.text)
             nodeList = root.findall("node")
             usersList = []
@@ -76,10 +74,8 @@ class SearchUser(QThread):
 
         if len(self.opuinStr) > 0:
             self.theCardIsSearched.emit(self.getOpuinStr())
-        # print('\n' + self.getOpuinStr())
 
     def setFlag(self):
-        # print(self.exitFlag)
         self.exitFlag = True
 
     def getOpuinStr(self):
