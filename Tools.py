@@ -4,9 +4,11 @@ import gol
 import os
 from http import cookiejar
 from xml.etree import ElementTree
+import configparser
 
 session = requests.session()
 session.keep_alive = False
+
 
 class Tools:
     baseUrl = 'https://mfkp.qq.com/cardshow'
@@ -15,28 +17,27 @@ class Tools:
 
     def __init__(self):
         if not Tools.flag:
-            self.path = os.getenv("APPDATA") + r'\McEx\cookie.txt'
+            self.path = r'./config.ini'
+            self.iniConfig = configparser.ConfigParser()  # 类实例化
             if not os.path.exists(self.path):
-                os.mkdir(os.getenv("APPDATA") + r'\McEx')
-                with open(self.path, mode='w', encoding='utf-8') as fObject:
-                    fObject.write("#LWP-Cookies-2.0\n")
-                    fObject.write('Set-Cookie3: skey="@h"; path="/"; domain=""; path_spec; discard; HttpOnly=None; '
-                                  'version=0\n')
-                    fObject.write(
-                        'Set-Cookie3: uin=o1; path="/"; domain=""; path_spec; discard; HttpOnly=None; version=0\n')
-                gol.set_value('isLogined', False)
+                self.iniConfig.add_section('config')  # 首先添加一个新的section
+                self.iniConfig.set('config', 'uin', '')  # 写入数据
+                self.iniConfig.set('config', 'skey', '')  # 写入数据
+                self.iniConfig.write(open(self.path, 'a'))  # 保存数据
+                self.loadCookie()
             else:
                 self.loadCookie()
             Tools.flag = True
 
-        # isLogined = False
-        # cookies = {}
-
     def loadCookie(self):
-        load_cookieJar = cookiejar.LWPCookieJar()
-        load_cookieJar.load(self.path, ignore_discard=True, ignore_expires=True)
-        load_cookies = requests.utils.dict_from_cookiejar(load_cookieJar)
+        self.iniConfig.read(self.path)
+        load_cookies = {
+            "uin": 'o' + self.iniConfig['config']['uin'],
+            "skey": '@' + self.iniConfig['config']['skey']
+        }
+        # print(load_cookies)
         gol.set_value('cookies', load_cookies)
+        gol.set_value('uin', self.iniConfig['config']['uin'])
         params = {
             "cmd": "card_user_mainpage",
             "h5ver": 1,
@@ -46,8 +47,8 @@ class Tools:
         }
         res = self.post(params=params, data=data)
         root = ElementTree.XML(res.text)
+        # print(root.attrib["code"])
         if root.attrib["code"] == '0':
-            print('Token-有效')
             gol.set_value('isLogined', True)
 
     def saveCookie(self):
@@ -56,12 +57,12 @@ class Tools:
         requests.utils.cookiejar_from_dict({c: str(cookies[c]) for c in cookies}, new_cookie_jar)
         new_cookie_jar.save(self.path, ignore_discard=True, ignore_expires=True)
 
-        print('Token-保存成功')
+        # print('Token-保存成功')
 
     def post(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl
         cookies = gol.get_value("cookies")
-
+        # print(65, cookies)
         try:
             r = requests.post(url=url, data=data, params=params, cookies=cookies)
             r.keep_alive = False

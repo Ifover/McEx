@@ -5,7 +5,7 @@ from SearchCard import SearchCard
 from Tools import Tools
 from xml.dom.minidom import parse
 from xml.etree import ElementTree
-
+import gol
 
 class SearchUser(QThread):
     sec_changed_signal = pyqtSignal(int)  # 信号类型：int
@@ -21,15 +21,14 @@ class SearchUser(QThread):
         self.tool = kwargs['tool']  # 要找寻的卡片ID
         self.isExch = kwargs['isExch']  # 跳过有要求的卡友
 
-
     def run(self):
         # tool = Tools()
         while not self.exitFlag:
             mCardUserThemeList = {
                 "cmd": "card_user_theme_list",
                 "h5ver": 1,
-                "uin": self.tool.uin,
-                "tid": int(self.tid),  # 卡友正在练的套卡ID
+                "uin": gol.get_value('uin'),
+                "tid": int(self.tid),  # 卡友正在练的套卡ID985
             }
 
             res = self.tool.post(params=mCardUserThemeList)

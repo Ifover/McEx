@@ -9,20 +9,23 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *  # Qt, QPropertyAnimation
 from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
+from PyQt5.QtMultimedia import QSound
+
 # QMainWindow, QApplication, QMenuBar, QGroupBox, QTreeWidget, QWidget, QGridLayout, \
 #     QPushButton, QTreeWidgetItem, QListWidget, QAbstractItemView, QComboBox, QListWidgetItem, QTreeWidgetItemIterator, \
 #     QMessageBox
-from WebLogin import LoginWeb
+# from WebLogin import LoginWeb
 
-from Tools import Tools
 from SearchUser import SearchUser
 import gol
 import win32gui
 import win32con
 
 
-class Ui_MainWindow(object):
-    def __init__(self):
+
+class MainWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
         self.isStart = False
         self.cardsMine = []
         self.selectCardList = []
@@ -38,42 +41,27 @@ class Ui_MainWindow(object):
 
         # super().__init__()
 
-    def setupUi(self, MainWindow):
-        self.MainWindow = MainWindow
-        MainWindow.setWindowTitle("MainWindow")
-        MainWindow.setWindowIcon(QIcon('wand.ico'))
-        # MainWindow.setWindowFlags(QtGui.QtWindowStaysOnTopHint)
-        MainWindow.resize(515, 400)
-        MainWindow.setFixedSize(515, 400)
+    def setupUi(self, **kwargs):
+        self.tool = kwargs['tool']
+        self.setWindowTitle("MainWindow")
+        self.setWindowIcon(QIcon('wand.ico'))
+        self.resize(515, 400)
+        self.setFixedSize(515, 400)
 
-        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar = QMenuBar(self)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 800, 20))
 
         self.labelStatusStr = QLabel("xxxx")
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusBar = QtWidgets.QStatusBar(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(self.centralwidget)
+        self.statusBar = QtWidgets.QStatusBar(self)
         self.statusBar.addPermanentWidget(self.labelStatusStr, stretch=4)
         #
-        MainWindow.setStatusBar(self.statusBar)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.setStatusBar(self.statusBar)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-        self.isLogined()
+        # self.isLogined()
         # self.init()
-
-    def isLogined(self):
-        gol._init()
-        #
-        self.tool = Tools()
-        if not gol.get_value("isLogined"):
-            bar1 = self.menuBar.addAction('登录')
-            # bar1.addAction('New')
-            bar1.triggered.connect(self.handleLogin)
-
-            MainWindow.setMenuBar(self.menuBar)
-
-            self.labelStatusStr.setText("请先登录")
-            return
         self.init({
             "code": 0,
             "data": {
@@ -82,18 +70,21 @@ class Ui_MainWindow(object):
             }
         })
 
+    # def isLogined(self):
+
     def init(self, data):
+
         if data["code"] == 0:
             self.labelStatusStr.setText("登录成功，正在初始化数据")
 
-            gol.set_value("cookies", data['data']['cookies'])
-            gol.set_value("uin", data['data']['uin'])
-            self.tool.saveCookie()
+            # gol.set_value("cookies", data['data']['cookies'])
+            # gol.set_value("uin", data['data']['uin'])
+            # self.tool.saveCookie()
 
             self.uin = data['data']['uin']
-            self.tool.uin = data['data']['uin']
+            # self.tool.uin = data['data']['uin']
             # self.tool.cookies = data['data']['cookies']
-            self.setMenu()
+            self.createMenu()
             # region 初始化字典
             cardInfoV3 = self.tool.get("http://appimg2.qq.com/card/mk/card_info_v3.xml")
             xmlStr = cardInfoV3.content.decode()
@@ -119,13 +110,13 @@ class Ui_MainWindow(object):
                 }
             # endregion
 
-            self.groupBox = QGroupBox(MainWindow)
+            self.groupBox = QGroupBox(self)
             self.groupBox.setGeometry(QtCore.QRect(-165, 28, 210, 345))
             self.groupBox.setAutoFillBackground(True)
             self.groupBox.setTitle("选择套卡")
             self.groupBox.show()
 
-            self.groupBox2 = QGroupBox(MainWindow)
+            self.groupBox2 = QGroupBox(self)
             self.groupBox2.setGeometry(QtCore.QRect(50, 28, 180, 345))
             self.groupBox2.setAutoFillBackground(True)
             self.groupBox2.setTitle("选择卡片")
@@ -162,13 +153,17 @@ class Ui_MainWindow(object):
 
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")
-        self.my_login = LoginWeb()
-        self.my_login.my_signal.connect(self.init)
-        self.my_login.start()
-        self.my_login.exec()
+        # s = SecondWindow()
+        from FormLogin import FormLogin
 
-    def setMenu(self):
-        MainWindow.setMenuBar(self.menuBar)
+        # self.viewShow = QDialog()
+        self.uui = FormLogin()
+        self.uui.setupUi(tool=self.tool)
+        self.close()
+        self.uui.show()
+
+    def createMenu(self):
+        self.setMenuBar(self.menuBar)
         self.menuBar.clear()
         params = {
             "cmd": "card_user_mainpage",
@@ -184,8 +179,8 @@ class Ui_MainWindow(object):
         userName = userInfo.attrib["nick"] if userInfo.attrib["nick"] != '' else userInfo.attrib["uin"]
 
         bar1 = self.menuBar.addMenu(userName)
-        bar1.addAction('注销')
-        bar1.triggered.connect(self.handleLogin)
+        logout = bar1.addAction('注销')
+        logout.triggered.connect(self.handleLogin)
 
         bar2 = self.menuBar.addMenu('设置')
         zd = bar2.addAction('置顶')
@@ -199,7 +194,7 @@ class Ui_MainWindow(object):
     # 绘制 - 我的卡箱
     def setMineBox(self):
 
-        self.groupMineBox = QGroupBox(MainWindow)
+        self.groupMineBox = QGroupBox(self)
         self.groupMineBox.setGeometry(QtCore.QRect(240, 28, 270, 345))
         self.groupMineBox.setAutoFillBackground(True)
         self.groupMineBox.setTitle("****.卡箱")
@@ -234,13 +229,15 @@ class Ui_MainWindow(object):
         self.btnMineBuy = QPushButton(self.layoutWidget)
         self.btnMineBuy.setText("买")
         self.btnMineBuy.setEnabled(False)
+        self.btnMineBuy.setToolTip('还没弄，嘻嘻')
         self.btnMineBuy.setMinimumSize(QtCore.QSize(32, 24))
         self.btnMineBuy.show()
         self.gridLayout.addWidget(self.btnMineBuy, 0, 0, 1, 1)
 
         self.btnMineSell = QPushButton(self.layoutWidget)
         self.btnMineSell.setText("卖")
-        # self.btnMineSell.setEnabled(False)
+        self.btnMineSell.setEnabled(False)
+        self.btnMineSell.setToolTip('还没弄，嘻嘻')
         self.btnMineSell.clicked.connect(self.handleMineSell)
         self.btnMineSell.setMinimumSize(QtCore.QSize(32, 24))
         self.btnMineSell.show()
@@ -258,7 +255,7 @@ class Ui_MainWindow(object):
 
     # 绘制 - 卡友卡箱
     def setFriendBox(self):
-        self.groupFriendBox = QGroupBox(MainWindow)
+        self.groupFriendBox = QGroupBox(self)
         self.groupFriendBox.setGeometry(QtCore.QRect(525, 28, 270, 345))
         self.groupFriendBox.setAutoFillBackground(True)
         self.groupFriendBox.setTitle("xxxxx.卡箱")
@@ -549,8 +546,8 @@ class Ui_MainWindow(object):
             self.isStart = True
             self.opuin = ''
             self.btnSearch.setText("停")
-            MainWindow.resize(515, 400)
-            MainWindow.setFixedSize(515, 400)
+            self.resize(515, 400)
+            self.setFixedSize(515, 400)
             self.thread = SearchUser(themeId=self.themeId,
                                      selectCardList=self.selectCardList,
                                      tool=self.tool,
@@ -587,10 +584,13 @@ class Ui_MainWindow(object):
         if code == '0':
             self.statusBar.setStyleSheet("QWidget{color: #28a745}")  # success
             self.labelStatusStr.setText('交换成功~')
+            self.sound = QSound('./sound/success.wav')
         else:
             self.statusBar.setStyleSheet("QWidget{color: #dc3545}")  # error
             self.labelStatusStr.setText(etXml.attrib['message'])
+            self.sound = QSound('./sound/fail.wav')
 
+        self.sound.play()
         self.btnFriendExChange.setEnabled(False)
         self.loadMineBox()
         self.loadFriendBox()
@@ -654,12 +654,18 @@ class Ui_MainWindow(object):
         self.exitFlag = False
         self.isStart = False
         self.btnSearch.toggle()
-        MainWindow.resize(800, 400)
-        MainWindow.setFixedSize(800, 400)
+        self.resize(800, 400)
+        self.setFixedSize(800, 400)
         # self.btnSearch.setEnabled(True)
+
+        # playsound('./sound/find.wav')
+
+        # os.system('mpg123' + './sound/find.wav')
         self.btnSearch.setText("搜")
         self.statusBar.showMessage('找到了!!!')
         self.loadFriendBox()
+        self.sound = QSound('./sound/find.wav')
+        self.sound.play()
 
     # 状态栏 - 搜索中[更新]
     def updateStatusBar(self, num):
@@ -822,15 +828,4 @@ class Ui_MainWindow(object):
                                   win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW)
 
         win32gui.SetForegroundWindow(hwnd)
-        MainWindow.show()
-
-
-if __name__ == '__main__':
-    # isLogined = True
-
-    app = QApplication(sys.argv)
-    MainWindow = QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        self.show()
