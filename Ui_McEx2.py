@@ -16,11 +16,11 @@ from PyQt5.QtMultimedia import QSound
 #     QMessageBox
 # from WebLogin import LoginWeb
 
+import resource
 from SearchUser import SearchUser
 import gol
 import win32gui
 import win32con
-
 
 
 class MainWindow(QMainWindow):
@@ -43,8 +43,8 @@ class MainWindow(QMainWindow):
 
     def setupUi(self, **kwargs):
         self.tool = kwargs['tool']
-        self.setWindowTitle("MainWindow")
-        self.setWindowIcon(QIcon('wand.ico'))
+        self.setWindowTitle("Super McEx")
+        self.setWindowIcon(QIcon(':/icon.ico'))
         self.resize(515, 400)
         self.setFixedSize(515, 400)
 
@@ -103,10 +103,11 @@ class MainWindow(QMainWindow):
 
             for theme in self.themes:
                 self.rootThemeDict[theme.attrib["id"]] = {
-                    "id": theme.attrib["id"],
+                    "id": int(theme.attrib["id"]),
                     "themeName": theme.attrib["name"],
-                    "diff": theme.attrib["diff"],
+                    "diff": int(theme.attrib["diff"]),
                     "type": int(theme.attrib["type"]),
+                    "time": int(theme.attrib["time"]),
                 }
             # endregion
 
@@ -548,10 +549,13 @@ class MainWindow(QMainWindow):
             self.btnSearch.setText("停")
             self.resize(515, 400)
             self.setFixedSize(515, 400)
+            self.btnReloadCardList.setEnabled(False)
+            self.checkExch.setEnabled(False)
             self.thread = SearchUser(themeId=self.themeId,
                                      selectCardList=self.selectCardList,
                                      tool=self.tool,
-                                     isExch=self.isExch)
+                                     isExch=self.isExch,
+                                     rootThemeDict=self.rootThemeDict)
             self.thread.sec_changed_signal.connect(self.updateStatusBar)
             self.thread.theCardIsSearched.connect(self.cardSearched)
             self.thread.start()
@@ -560,6 +564,8 @@ class MainWindow(QMainWindow):
             self.thread.setFlag()
             # self.thread.stop()
             self.btnSearch.setText("搜")
+            self.checkExch.setEnabled(True)
+            self.btnReloadCardList.setEnabled(True)
             # self.thread.exitFlag = True
             self.isStart = False
 
@@ -663,6 +669,8 @@ class MainWindow(QMainWindow):
         # os.system('mpg123' + './sound/find.wav')
         self.btnSearch.setText("搜")
         self.statusBar.showMessage('找到了!!!')
+        self.btnReloadCardList.setEnabled(True)
+        self.checkExch.setEnabled(True)
         self.loadFriendBox()
         self.sound = QSound('./sound/find.wav')
         self.sound.play()

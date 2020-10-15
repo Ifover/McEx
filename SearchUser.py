@@ -7,6 +7,7 @@ from xml.dom.minidom import parse
 from xml.etree import ElementTree
 import gol
 
+
 class SearchUser(QThread):
     sec_changed_signal = pyqtSignal(int)  # 信号类型：int
     theCardIsSearched = pyqtSignal(str)  # 信号类型：str
@@ -20,19 +21,30 @@ class SearchUser(QThread):
         self.findCards = kwargs['selectCardList']  # 要找寻的卡片ID
         self.tool = kwargs['tool']  # 要找寻的卡片ID
         self.isExch = kwargs['isExch']  # 跳过有要求的卡友
+        self.rootThemes = kwargs['rootThemeDict']
 
     def run(self):
         # tool = Tools()
+        newArr = []
+        for i in self.rootThemes:
+            newArr.insert(0, self.rootThemes[i])
+        self.rootThemes = newArr
+        # print(self.rootThemes)
+
         while not self.exitFlag:
             mCardUserThemeList = {
                 "cmd": "card_user_theme_list",
                 "h5ver": 1,
                 "uin": gol.get_value('uin'),
-                "tid": int(self.tid),  # 卡友正在练的套卡ID985
+                "tid": int(self.tid),  # 卡友正在练的套卡ID985  int(self.tid)
             }
 
             res = self.tool.post(params=mCardUserThemeList)
             root = ElementTree.XML(res.text)
+
+            if root.attrib["code"] != '0':
+                self.setDefaultTid()
+
             nodeList = root.findall("node")
             usersList = []
 
@@ -76,6 +88,16 @@ class SearchUser(QThread):
 
     def setFlag(self):
         self.exitFlag = True
+
+    def setDefaultTid(self):
+        for item in self.rootThemes:
+            if int(item['id']) < int(self.tid):
+                if not (item['type'] in [0, 1, 2, 5, 9]):
+                    #self.setDefaultTid()
+                    continue
+                else:
+                    self.tid = item['id']
+                    break
 
     def getOpuinStr(self):
         try:
