@@ -12,7 +12,7 @@ import gol
 class FormLogin(QDialog):
     def __init__(self):
         super(FormLogin, self).__init__()  # <---
-        from Ui_McEx2 import MainWindow
+        from MainWindow import MainWindow
         self.ui = MainWindow()
         self.path = r'./config.ini'
         self.iniConfig = configparser.ConfigParser()
