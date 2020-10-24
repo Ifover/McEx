@@ -4,6 +4,7 @@ from PyQt5.QtCore import *  # Qt, QPropertyAnimation
 from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
 import json
+import threading
 
 
 class Spirite(object):
@@ -40,7 +41,6 @@ class Spirite(object):
         self.gBoxSpirite.setTitle('灵宠探险')
         self.treeSpirite = QtWidgets.QTreeWidget(self.gBoxSpirite)
 
-
         self.treeSpirite.setGeometry(QtCore.QRect(5, 20, 550, 330))
         self.treeSpirite.setHeaderLabels(['地图', '提示'])
         self.treeSpirite.setColumnWidth(0, 130)
@@ -73,7 +73,7 @@ class Spirite(object):
                 child.setText(2,
                               json.dumps({"id": int(section.attrib['open_c']), "subId": int(section.attrib['open_s'])}))
 
-                child.setToolTip(1, '探索奖励：' + section.attrib['award'])
+                child.setToolTip(1, '探索奖励：\n' + "\n".join(section.attrib['award'].split('|')))
 
                 noLv = True
                 for item in self.spiriteInfo['spirites']:
@@ -137,7 +137,6 @@ class Spirite(object):
 
         self.refreshSpiriteInfo()
 
-
     def handleTreeItemChange(self, item):
         iterator = QTreeWidgetItemIterator(self.treeSpirite)
 
@@ -172,7 +171,6 @@ class Spirite(object):
         self.spiriteInfo['colorStone'] = newData.attrib['color_stone']
         self.spiriteInfo['money'] = user.attrib['money']
 
-
     def refreshSpiriteInfo(self):
         self.labTreasureMap.setText(str(self.spiriteInfo['treasure_map']))
         self.labGoldKey.setText(str(self.spiriteInfo['gold_key']))
@@ -182,25 +180,49 @@ class Spirite(object):
         self.labPower.setText(str(self.spiriteInfo['power']))
         self.labYinDing.setText(str(self.spiriteInfo['yinding']))
         self.labBaiBianDan.setText(str(self.spiriteInfo['baibiandan']))
-        self.labExploreCnt.setText(str(f"{self.spiriteInfo['torrid_zone_explore_cnt']} / 10"))
+        self.labExploreCnt.setText(str(f"{10 - self.spiriteInfo['torrid_zone_explore_cnt']} / 10"))
+
+    # def businessExplore(self):
 
     def handleExplore(self):
-        # print(self.items['73_0'])
-        #
-        data = {
-            "cnt": 1,
-            "id": self.currentExplore['id'],
-            "act": 11,
-            "sub_id": self.currentExplore['subId']
-        }
-        print(data)
+        # print(self.businessExplore)
+        # self.threadExplore = QThread()
+        # self.threadExplore.started.connect(self.businessExplore)
+        # # self.threadExplore = threading.Thread(target=self.businessExplore)
+        self.threadExplore = self.businessExplore(
+            tool=self.tool,
+            currentExplore=self.currentExplore,
+        )
+        self.threadExplore.start()
+        # self.threadExplore.join()
 
-        # spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
-        # data = spiriteRes.json()
-        # if data['code'] == 0:
-        #     contents = data['content'].split(',')
-        #     for content in contents:
-        #         arr = content.split('_')
-        #         value = arr[0] + '_' + arr[1]
-        #         # print(value)
-        #         print(self.items[value]['name'] + 'x' + str(arr[2]))
+    class businessExplore(QThread):
+        def __init__(self, *args, **kwargs):
+            super().__init__()
+            self.currentExplore = kwargs['currentExplore']
+            self.tool = kwargs['tool']
+
+        def run(self):
+            # print(self.items['73_0'])
+            #
+            data = {
+                # "cnt": 1,
+                "id": self.currentExplore['id'],
+                "act": 11,
+                "sub_id": self.currentExplore['subId']
+            }
+            # print(data)
+            times = 10
+            while times > 0:
+                spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
+                # spiriteData = spiriteRes.text
+                spiriteData = spiriteRes.json()
+                print(spiriteData)
+                times -= 1
+                if 'content' in spiriteData:
+                    contents = spiriteData['content'].split(',')
+                    for content in contents:
+                        arr = content.split('_')
+                        value = arr[0] + '_' + arr[1]
+                        # print(value)
+                        print(self.items[value]['name'] + 'x' + str(arr[2]))
