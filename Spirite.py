@@ -5,6 +5,7 @@ from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
 import json
 import threading
+import time
 
 
 class Spirite(object):
@@ -12,6 +13,7 @@ class Spirite(object):
         self.items = {}
         self.spiriteInfo = {}
         self.currentExplore = {}
+        self.spiriteLogText = '''<style>p{padding:0;margin:0;}.time{font-weight:700;} </style>'''
 
     def setupUi(self, **kwargs):
         self.tool = kwargs['tool']
@@ -32,6 +34,7 @@ class Spirite(object):
 
         self.createSpirite()
         self.createSpiriteInfo()
+        self.createSpiriteLog()
 
     def createSpirite(self):
         self.loadSpiriteInfo()
@@ -41,7 +44,7 @@ class Spirite(object):
         self.gBoxSpirite.setTitle('灵宠探险')
         self.treeSpirite = QtWidgets.QTreeWidget(self.gBoxSpirite)
 
-        self.treeSpirite.setGeometry(QtCore.QRect(5, 20, 550, 330))
+        self.treeSpirite.setGeometry(QtCore.QRect(5, 20, 350, 330))
         self.treeSpirite.setHeaderLabels(['地图', '提示'])
         self.treeSpirite.setColumnWidth(0, 130)
         self.treeSpirite.itemClicked.connect(self.handleTreeItemChange)
@@ -49,10 +52,21 @@ class Spirite(object):
         res = self.tool.get("http://appimg2.qq.com/card/mk/soul_elf_v_51.xml")
         xmlStr = res.content.decode()
         root = ElementTree.XML(xmlStr)
-        # data = root.find("data")
+
+        piecelist = root.find("card_piecelist")
+        cardPieces = piecelist.findall("card_piece")
+        for item in cardPieces:
+            self.items[f"56_{item.attrib['id']}"] = {
+                "value": f"56_{item.attrib['id']}",
+                # "type": item.attrib['type'],
+                "id": item.attrib['id'],
+                "name": item.attrib['name'],
+            }
+
         cAcross = root.find("c_across")
         chapters = cAcross.findall('chapter')
 
+        id = 0
         for chapter in chapters:
             treeChapter = QTreeWidgetItem(self.treeSpirite)
             treeChapter.setText(0, chapter.attrib['name'])
@@ -65,13 +79,18 @@ class Spirite(object):
                 treeChapter.setDisabled(True)
 
             sections = chapter.findall('section')
+
+            subId = 0
             for section in sections:
                 child = QTreeWidgetItem()
                 child.setText(0, section.attrib['name'])
                 child.setCheckState(0, Qt.Unchecked)
                 child.setText(1, '探索奖励：' + section.attrib['award'])
-                child.setText(2,
-                              json.dumps({"id": int(section.attrib['open_c']), "subId": int(section.attrib['open_s'])}))
+                child.setText(2, json.dumps({
+                    "id": id,
+                    "subId": subId
+                })
+                              )
 
                 child.setToolTip(1, '探索奖励：\n' + "\n".join(section.attrib['award'].split('|')))
 
@@ -90,17 +109,19 @@ class Spirite(object):
                     child.setDisabled(True)
 
                 treeChapter.addChild(child)
-
+                subId += 1
+            id += 1
             # self.items[f"{item.attrib['name']}_{item.attrib['id']}"] = {
             #     "value": f"{item.attrib['type']}_{item.attrib['id']}",
             #     "type": item.attrib['type'],
             #     "id": item.attrib['id'],
             #     "name": item.attrib['name'],
             # }
+
         self.treeSpirite.expandAll()
 
         self.btnExplore = QPushButton(self.gBoxSpirite)
-        self.btnExplore.setGeometry(QtCore.QRect(560, 310, 210, 40))
+        self.btnExplore.setGeometry(QtCore.QRect(360, 310, 150, 40))
         self.btnExplore.setText("开始探索")
         self.btnExplore.clicked.connect(self.handleExplore)
         self.btnExplore.setEnabled(True)
@@ -108,10 +129,10 @@ class Spirite(object):
     def createSpiriteInfo(self):
         self.gBoxSpiriteInfo = QtWidgets.QGroupBox(self.gBoxSpirite)
         self.gBoxSpiriteInfo.setTitle('信息')
-        self.gBoxSpiriteInfo.setGeometry(QtCore.QRect(560, 15, 210, 290))
+        self.gBoxSpiriteInfo.setGeometry(QtCore.QRect(360, 15, 150, 290))
 
         self.fLaySpirite = QFormLayout(self.gBoxSpiriteInfo)
-        self.fLaySpirite.setGeometry(QtCore.QRect(5, 300, 200, 300))
+        self.fLaySpirite.setGeometry(QtCore.QRect(5, 300, 140, 300))
 
         self.fLaySpirite.setLabelAlignment(Qt.AlignRight)
 
@@ -136,6 +157,31 @@ class Spirite(object):
         self.fLaySpirite.addRow("穿越丛林", self.labExploreCnt)
 
         self.refreshSpiriteInfo()
+
+    def createSpiriteLog(self):
+        self.gBoxSpiriteLog = QtWidgets.QGroupBox(self.gBoxSpirite)
+        self.gBoxSpiriteLog.setTitle('日志')
+        self.gBoxSpiriteLog.setGeometry(QtCore.QRect(515, 15, 255, 335))
+
+        self.tBrowSpiriteLog = QTextBrowser(self.gBoxSpiriteLog)
+        self.tBrowSpiriteLog.setGeometry(QtCore.QRect(5, 20, 245, 310))
+
+    def refreshSpiriteLog(self, value, num):
+        # value = res['value']
+        # num = res['num']
+        print(value, num)
+
+        # textCss = '''<style>p{padding:0;margin:0;}.time{font-weight:700;} </style>'''
+
+        textHtml = f'''
+            <p>
+                <span class="time">[{time.strftime("%H:%M:%S")}]</span>
+                <span>获得 {self.items[value]['name']} x {num}</span>
+            </p>
+        '''
+
+        self.spiriteLogText = self.spiriteLogText + textHtml
+        self.tBrowSpiriteLog.setText(self.spiriteLogText)
 
     def handleTreeItemChange(self, item):
         iterator = QTreeWidgetItemIterator(self.treeSpirite)
@@ -182,37 +228,31 @@ class Spirite(object):
         self.labBaiBianDan.setText(str(self.spiriteInfo['baibiandan']))
         self.labExploreCnt.setText(str(f"{10 - self.spiriteInfo['torrid_zone_explore_cnt']} / 10"))
 
-    # def businessExplore(self):
-
     def handleExplore(self):
-        # print(self.businessExplore)
-        # self.threadExplore = QThread()
-        # self.threadExplore.started.connect(self.businessExplore)
-        # # self.threadExplore = threading.Thread(target=self.businessExplore)
         self.threadExplore = self.businessExplore(
             tool=self.tool,
             currentExplore=self.currentExplore,
         )
+        self.threadExplore.business_explored.connect(self.refreshSpiriteLog)
         self.threadExplore.start()
-        # self.threadExplore.join()
 
     class businessExplore(QThread):
+        business_explored = pyqtSignal(str, str)
+
         def __init__(self, *args, **kwargs):
             super().__init__()
             self.currentExplore = kwargs['currentExplore']
             self.tool = kwargs['tool']
 
         def run(self):
-            # print(self.items['73_0'])
-            #
             data = {
-                # "cnt": 1,
+                "cnt": 1,
                 "id": self.currentExplore['id'],
                 "act": 11,
                 "sub_id": self.currentExplore['subId']
             }
             # print(data)
-            times = 10
+            times = 3
             while times > 0:
                 spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
                 # spiriteData = spiriteRes.text
@@ -224,5 +264,6 @@ class Spirite(object):
                     for content in contents:
                         arr = content.split('_')
                         value = arr[0] + '_' + arr[1]
-                        # print(value)
-                        print(self.items[value]['name'] + 'x' + str(arr[2]))
+                        self.business_explored.emit(value, str(arr[2]))
+                else:
+                    times = 0
