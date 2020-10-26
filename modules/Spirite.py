@@ -90,8 +90,7 @@ class Spirite(object):
                 child.setText(2, json.dumps({
                     "id": id,
                     "subId": subId
-                })
-                              )
+                }))
 
                 child.setToolTip(1, '探索奖励：\n' + "\n".join(section.attrib['award'].split('|')))
 
@@ -101,8 +100,7 @@ class Spirite(object):
                         noLv = False
                         break
 
-                if (self.spiriteInfo['pass_id'] < int(section.attrib['open_c'])) or \
-                        (self.spiriteInfo['section_id'] < int(section.attrib['open_s'])) or \
+                if (self.spiriteInfo['pass_id'] * self.spiriteInfo['section_id'] < int(section.attrib['open_c']) * int(section.attrib['open_s'])) or \
                         (len(self.spiriteInfo['spirites']) < int(section.attrib['elf_num'])) or \
                         noLv:
                     child.setText(1, '条件不足')
