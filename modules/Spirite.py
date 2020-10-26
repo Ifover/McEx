@@ -13,7 +13,8 @@ class Spirite(object):
         self.items = {}
         self.spiriteInfo = {}
         self.currentExplore = {}
-        self.spiriteLogText = '''<style>p{padding:0;margin:0;}.time{font-weight:700;} </style>'''
+        self.spiriteLogCss = '''<style>p{padding:0;margin:0;}.time{font-weight:700;}.error{color:#ef1f1f;} </style>'''
+        self.spiriteLogText = ""
 
     def setupUi(self, **kwargs):
         self.tool = kwargs['tool']
@@ -166,22 +167,45 @@ class Spirite(object):
         self.tBrowSpiriteLog = QTextBrowser(self.gBoxSpiriteLog)
         self.tBrowSpiriteLog.setGeometry(QtCore.QRect(5, 20, 245, 310))
 
-    def refreshSpiriteLog(self, value, num):
-        # value = res['value']
-        # num = res['num']
-        print(value, num)
+    def refreshSpiriteLog(self, spiriteData):
+        if 'error' in spiriteData and spiriteData['error'] == 1:
+            textHtml = f'''
+                    <p>
+                        <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>请先选择探险地图</span>
+                    </p>
+                '''
+        else:
 
-        # textCss = '''<style>p{padding:0;margin:0;}.time{font-weight:700;} </style>'''
+            if 'content' in spiriteData:
+                contents = spiriteData['content'].split(',')
+                for content in contents:
+                    arr = content.split('_')
+                    value = arr[0] + '_' + arr[1]
+                    textHtml = f'''
+                        <p>
+                            <span class="time">[{time.strftime("%H:%M:%S")}]</span>
+                            <span>获得 {self.items[value]['name']} x {str(arr[2])}</span>
+                        </p>
+                    '''
+                    self.loadSpiriteInfo()
+                    self.refreshSpiriteInfo()
 
-        textHtml = f'''
-            <p>
-                <span class="time">[{time.strftime("%H:%M:%S")}]</span>
-                <span>获得 {self.items[value]['name']} x {num}</span>
-            </p>
-        '''
+            elif spiriteData['code'] == -4:
+                textHtml = f'''
+                        <p>
+                            <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>探险次数不足</span>
+                        </p>
+                '''
 
-        self.spiriteLogText = self.spiriteLogText + textHtml
-        self.tBrowSpiriteLog.setText(self.spiriteLogText)
+            else:
+                textHtml = f'''
+                        <p>
+                            <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>未知错误，反正报错了</span>
+                        </p>
+                '''
+
+        self.spiriteLogText = textHtml + self.spiriteLogText
+        self.tBrowSpiriteLog.setText(self.spiriteLogCss + self.spiriteLogText)
 
     def handleTreeItemChange(self, item):
         iterator = QTreeWidgetItemIterator(self.treeSpirite)
@@ -196,6 +220,7 @@ class Spirite(object):
 
             iterator.__iadd__(1)
 
+    # 获取 - 信息
     def loadSpiriteInfo(self):
         data = {
             "act": 1,
@@ -217,6 +242,7 @@ class Spirite(object):
         self.spiriteInfo['colorStone'] = newData.attrib['color_stone']
         self.spiriteInfo['money'] = user.attrib['money']
 
+    # 信息更新
     def refreshSpiriteInfo(self):
         self.labTreasureMap.setText(str(self.spiriteInfo['treasure_map']))
         self.labGoldKey.setText(str(self.spiriteInfo['gold_key']))
@@ -228,6 +254,7 @@ class Spirite(object):
         self.labBaiBianDan.setText(str(self.spiriteInfo['baibiandan']))
         self.labExploreCnt.setText(str(f"{10 - self.spiriteInfo['torrid_zone_explore_cnt']} / 10"))
 
+    # 开始探险
     def handleExplore(self):
         self.threadExplore = self.businessExplore(
             tool=self.tool,
@@ -237,7 +264,7 @@ class Spirite(object):
         self.threadExplore.start()
 
     class businessExplore(QThread):
-        business_explored = pyqtSignal(str, str)
+        business_explored = pyqtSignal(object)
 
         def __init__(self, *args, **kwargs):
             super().__init__()
@@ -245,25 +272,22 @@ class Spirite(object):
             self.tool = kwargs['tool']
 
         def run(self):
-            data = {
-                "cnt": 1,
-                "id": self.currentExplore['id'],
-                "act": 11,
-                "sub_id": self.currentExplore['subId']
-            }
-            # print(data)
-            times = 3
-            while times > 0:
-                spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
-                # spiriteData = spiriteRes.text
-                spiriteData = spiriteRes.json()
-                print(spiriteData)
-                times -= 1
-                if 'content' in spiriteData:
-                    contents = spiriteData['content'].split(',')
-                    for content in contents:
-                        arr = content.split('_')
-                        value = arr[0] + '_' + arr[1]
-                        self.business_explored.emit(value, str(arr[2]))
-                else:
-                    times = 0
+            try:
+                data = {
+                    "cnt": 1,
+                    "id": self.currentExplore['id'],
+                    "act": 11,
+                    "sub_id": self.currentExplore['subId']
+                }
+
+                times = 15
+                while times > 0:
+                    spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
+                    spiriteData = spiriteRes.json()
+                    print(spiriteData)
+                    times -= 1
+                    self.business_explored.emit(spiriteData)
+                    if not ('content' in spiriteData):
+                        times = 0
+            except KeyError:
+                self.business_explored.emit({"error": 1})

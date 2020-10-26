@@ -4,13 +4,13 @@
 
 from xml.etree import ElementTree
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import *  # Qt, QPropertyAnimation
 from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import QSound
 
-from SearchUser import SearchUser
+from modules.SearchUser import SearchUser
 import gol
 
 
@@ -523,7 +523,7 @@ class McEx(object):
         self.btnFriendOpen.setEnabled(True)  # 卡友容器 - 打开网站
 
         self.loadFriendBox()
-        self.sound = QSound('./sound/find.wav')
+        self.sound = QSound('../sound/find.wav')
         self.sound.play()
 
     # 换卡 - 请求
@@ -547,11 +547,11 @@ class McEx(object):
         if code == '0':
             self.labelStatusStr.setStyleSheet("QWidget{color: #28a745}")  # success
             self.labelStatusStr.setText('交换成功~')
-            self.sound = QSound('./sound/success.wav')
+            self.sound = QSound('../sound/success.wav')
         else:
             self.labelStatusStr.setStyleSheet("QWidget{color: #dc3545}")  # error
             self.labelStatusStr.setText(etXml.attrib['message'])
-            self.sound = QSound('./sound/fail.wav')
+            self.sound = QSound('../sound/fail.wav')
 
         self.sound.play()
         self.btnFriendExChange.setEnabled(False)

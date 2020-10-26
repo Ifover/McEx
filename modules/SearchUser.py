@@ -1,9 +1,6 @@
 import queue
-import winsound
 from PyQt5.QtCore import QThread, pyqtSignal
-from SearchCard import SearchCard
-from Tools import Tools
-from xml.dom.minidom import parse
+from modules.SearchCard import SearchCard
 from xml.etree import ElementTree
 import gol
 

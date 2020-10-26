@@ -22,8 +22,8 @@ class FormLogin(QDialog):
 
     def setupUi(self, **kwargs):
         self.tool = kwargs['tool']
-        self.resize(320, 200)
-        self.setFixedSize(320, 200)
+        self.resize(320, 160)
+        self.setFixedSize(320, 160)
         self.setWindowTitle("登录")
         qfl = QFormLayout()
         qfl.setLabelAlignment(Qt.AlignRight)
@@ -48,10 +48,17 @@ class FormLogin(QDialog):
         self.setLayout(qfl)
 
     def btnClick(self):
+        if self.uinLineEdit.text() == '' or self.sKeyLineEdit.text() == '':
+            QMessageBox.critical(self, "错误", "请输入QQ或者sKey")
+            return
+
+        # text = self.lEditCookie.text()
+        # arr = text.split(';')
         cookies = {
             "uin": 'o' + self.uinLineEdit.text(),
             "skey": '@' + self.sKeyLineEdit.text()
         }
+
         gol.set_value('cookies', cookies)
         params = {
             "cmd": "card_user_mainpage",
@@ -60,22 +67,25 @@ class FormLogin(QDialog):
         data = {
             "uin": self.uinLineEdit.text(),
         }
-        print(params, data)
-        res = self.tool.post(params=params, data=data)
+        # print(params)
+        res = self.tool.get(params=params, data=data)
         root = ElementTree.XML(res.text)
-        print(root.attrib["code"])
+
         if root.attrib["code"] == '0':
             # self.iniConfig = configparser.ConfigParser()
             # self.iniConfig.read(r'./config.ini')
             self.iniConfig.remove_option('config', 'uin')  # 删除一个配置
             self.iniConfig.remove_option('config', 'skey')  # 删除一个配置
+            # self.iniConfig.remove_option('config', 'cookies')  # 删除一个配置
 
             self.iniConfig.set('config', 'uin', self.uinLineEdit.text())  # 写入数据
             self.iniConfig.set('config', 'skey', self.sKeyLineEdit.text())  # 写入数据
+            # self.iniConfig.set('config', 'cookies', self.lEditCookie.text())  # 写入数据
             self.iniConfig.write(open(self.path, 'w'))  # 保存数据
-
 
             gol.set_value('isLogined', True)
             self.ui.setupUi(tool=self.tool)
             self.close()
             self.ui.show()
+        else:
+            QMessageBox.critical(self, "错误", "登录失败")

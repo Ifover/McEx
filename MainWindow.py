@@ -1,11 +1,11 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import *  # Qt, QPropertyAnimation
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
 
 from xml.etree import ElementTree
-from McEx import McEx
-from Spirite import Spirite
+from modules.McEx import McEx
+from modules.Spirite import Spirite
+# from modules.Gifts import Gifts
 import win32gui
 import win32con
 import gol
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(5, 5, 790, 395))
         self.tabWidget.setMinimumSize(QtCore.QSize(0, 280))
-        self.tabWidget.setObjectName('tabWidget')
+
         self.tabWidget.setAutoFillBackground(True)
         self.tabWidget.setTabBarAutoHide(False)
 
@@ -78,6 +78,7 @@ class MainWindow(QMainWindow):
             tabMcEx=self.tabMcEx,
             labelStatusStr=self.labelStatusStr
         )
+
         self.tabSpirite = QtWidgets.QWidget()
         self.tabWidget.addTab(self.tabSpirite, "灵宠")
         self.Spirite = Spirite()
@@ -87,7 +88,17 @@ class MainWindow(QMainWindow):
             labelStatusStr=self.labelStatusStr,
             uin=gol.get_value('cookies')['uin'][1:]
         )
-        self.tabWidget.setCurrentIndex(1)
+
+        # self.tabGifts = QtWidgets.QWidget()
+        # self.tabWidget.addTab(self.tabGifts, "礼物")
+        # self.Gifts = Gifts()
+        # self.Gifts.setupUi(
+        #     tool=self.tool,
+        #     tabGifts=self.tabGifts,
+        #     labelStatusStr=self.labelStatusStr,
+        #     uin=gol.get_value('cookies')['uin'][1:]
+        # )
+        self.tabWidget.setCurrentIndex(0)
 
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")
