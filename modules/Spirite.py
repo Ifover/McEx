@@ -13,7 +13,7 @@ class Spirite(object):
         self.items = {}
         self.spiriteInfo = {}
         self.currentExplore = {}
-        self.spiriteLogCss = '''<style>p{padding:0;margin:0;}.time{font-weight:700;}.error{color:#ef1f1f;} </style>'''
+        self.spiriteLogCss = '''<style>p{padding:0;margin:0;}.thick{font-weight:700;}.error{color:#ef1f1f;}.success{color:#37c186;} </style>'''
         self.spiriteLogText = ""
 
     def setupUi(self, **kwargs):
@@ -100,7 +100,8 @@ class Spirite(object):
                         noLv = False
                         break
 
-                if (self.spiriteInfo['pass_id'] * self.spiriteInfo['section_id'] < int(section.attrib['open_c']) * int(section.attrib['open_s'])) or \
+                if (self.spiriteInfo['pass_id'] * self.spiriteInfo['section_id'] < int(section.attrib['open_c']) * int(
+                        section.attrib['open_s'])) or \
                         (len(self.spiriteInfo['spirites']) < int(section.attrib['elf_num'])) or \
                         noLv:
                     child.setText(1, '条件不足')
@@ -169,36 +170,37 @@ class Spirite(object):
         if 'error' in spiriteData and spiriteData['error'] == 1:
             textHtml = f'''
                     <p>
-                        <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>请先选择探险地图</span>
+                        <span class="thick">[{time.strftime("%H:%M:%S")}]</span><span class="thick error">[错误]</span><span>请先选择探险地图</span>
                     </p>
                 '''
         else:
 
             if 'content' in spiriteData:
                 contents = spiriteData['content'].split(',')
+                textHtml = ''
                 for content in contents:
                     arr = content.split('_')
                     value = arr[0] + '_' + arr[1]
-                    textHtml = f'''
+                    textHtml += f'''
                         <p>
-                            <span class="time">[{time.strftime("%H:%M:%S")}]</span>
-                            <span>获得 {self.items[value]['name']} x {str(arr[2])}</span>
+                            <span class="thick">[{time.strftime("%H:%M:%S")}]</span>
+                            <span class="thick success">[获得]</span>
+                            <span>{self.items[value]['name']} x {str(arr[2])}</span>
                         </p>
                     '''
-                    self.loadSpiriteInfo()
-                    self.refreshSpiriteInfo()
+
 
             elif spiriteData['code'] == -4:
                 textHtml = f'''
                         <p>
-                            <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>探险次数不足</span>
+                            <span class="thick">[{time.strftime("%H:%M:%S")}]</span><span class="thick error">[错误]</span><span>探险次数不足</span>
                         </p>
                 '''
 
             else:
                 textHtml = f'''
                         <p>
-                            <span class="time">[{time.strftime("%H:%M:%S")}]</span><span class="time error">[错误]</span><span>未知错误，反正报错了</span>
+                            <span class="thick">[{time.strftime("%H:%M:%S")}]</span><span class="thick error">[错误]</span><span>未知错误，反正报错了</span>
                         </p>
                 '''
 
@@ -240,7 +242,7 @@ class Spirite(object):
         self.spiriteInfo['colorStone'] = newData.attrib['color_stone']
         self.spiriteInfo['money'] = user.attrib['money']
 
-    # 信息更新
+    # 信息 - 更新
     def refreshSpiriteInfo(self):
         self.labTreasureMap.setText(str(self.spiriteInfo['treasure_map']))
         self.labGoldKey.setText(str(self.spiriteInfo['gold_key']))
@@ -252,6 +254,10 @@ class Spirite(object):
         self.labBaiBianDan.setText(str(self.spiriteInfo['baibiandan']))
         self.labExploreCnt.setText(str(f"{10 - self.spiriteInfo['torrid_zone_explore_cnt']} / 10"))
 
+    def handleRefreshSpiriteInfo(self):
+        self.loadSpiriteInfo()
+        self.refreshSpiriteInfo()
+
     # 开始探险
     def handleExplore(self):
         self.threadExplore = self.businessExplore(
@@ -259,10 +265,12 @@ class Spirite(object):
             currentExplore=self.currentExplore,
         )
         self.threadExplore.business_explored.connect(self.refreshSpiriteLog)
+        self.threadExplore.business_explored_refresh.connect(self.handleRefreshSpiriteInfo)
         self.threadExplore.start()
 
     class businessExplore(QThread):
         business_explored = pyqtSignal(object)
+        business_explored_refresh = pyqtSignal(object)
 
         def __init__(self, *args, **kwargs):
             super().__init__()
@@ -284,8 +292,14 @@ class Spirite(object):
                     spiriteData = spiriteRes.json()
                     print(spiriteData)
                     times -= 1
+                    # spiriteData = {'code': 0,
+                    #                'content': '73_0_3,56_38_1,73_0_2',
+                    #                'desc': 'sucess',
+                    #                'need_callback': None}
                     self.business_explored.emit(spiriteData)
                     if not ('content' in spiriteData):
                         times = 0
             except KeyError:
                 self.business_explored.emit({"error": 1})
+            finally:
+                self.business_explored_refresh.emit(True)
