@@ -33,9 +33,10 @@ class Tools:
         self.iniConfig.read(self.path)
         load_cookies = {
             "uin": 'o' + self.iniConfig['config']['uin'],
-            "skey": '@' + self.iniConfig['config']['skey']
+            "skey": '@' + self.iniConfig['config']['skey'],
+            "cp_token_good": f"{self.iniConfig['config']['uin']}@{self.iniConfig['config']['skey']}606129"
         }
-        # print(load_cookies)
+        print(load_cookies)
         gol.set_value('cookies', load_cookies)
         gol.set_value('uin', self.iniConfig['config']['uin'])
         params = {
@@ -50,14 +51,6 @@ class Tools:
         # print(root.attrib["code"])
         if root.attrib["code"] == '0':
             gol.set_value('isLogined', True)
-
-    def saveCookie(self):
-        cookies = gol.get_value('cookies')
-        new_cookie_jar = cookiejar.LWPCookieJar(self.path)
-        requests.utils.cookiejar_from_dict({c: str(cookies[c]) for c in cookies}, new_cookie_jar)
-        new_cookie_jar.save(self.path, ignore_discard=True, ignore_expires=True)
-
-        # print('Token-保存成功')
 
     def post(self, url=None, data={}, params={}):
         url = url if url else self.baseUrl

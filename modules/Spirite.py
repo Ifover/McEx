@@ -86,31 +86,42 @@ class Spirite(object):
                 child = QTreeWidgetItem()
                 child.setText(0, section.attrib['name'])
                 child.setCheckState(0, Qt.Unchecked)
-                child.setText(1, '探索奖励：' + section.attrib['award'])
                 child.setText(2, json.dumps({
                     "id": id,
                     "subId": subId
                 }))
 
                 child.setToolTip(1, '探索奖励：\n' + "\n".join(section.attrib['award'].split('|')))
+                maxLv = max(node['lv'] for node in self.spiriteInfo['spirites'])  # 获取灵宠最高等级
 
-                noLv = True
-                for item in self.spiriteInfo['spirites']:
-                    if item['lv'] >= int(section.attrib['elf_lv']):
-                        noLv = False
-                        break
+                '''
+                    判断记录
+                    pass_id     --> 已通过的父章节
+                    section_id  --> 已通过的子章节
+                    open_c      --> 父章节
+                    open_s      --> 子章节
+                    1.父章节[通]等于父章节且判断子章节[通]是否小于子章节 如果小于则条件不足
+                    2.父章节[通]小于父章节           如果成立则条件不足
+                    3.灵宠数量小于需要数量           如果成立则条件不足
+                    4.灵宠最高等级小于需要最高等级    如果成立则条件不足
+                    
+                '''
+                if ((self.spiriteInfo['pass_id'] == int(section.attrib['open_c'])) and \
+                    (self.spiriteInfo['section_id'] < int(section.attrib['open_s']))) or \
+                        self.spiriteInfo['pass_id'] < int(section.attrib['open_c']) or \
+                        len(self.spiriteInfo['spirites']) < int(section.attrib['elf_num']) or \
+                        maxLv < int(section.attrib['elf_lv']):
 
-                if (self.spiriteInfo['pass_id'] * self.spiriteInfo['section_id'] < int(section.attrib['open_c']) * int(
-                        section.attrib['open_s'])) or \
-                        (len(self.spiriteInfo['spirites']) < int(section.attrib['elf_num'])) or \
-                        noLv:
                     child.setText(1, '条件不足')
                     child.setToolTip(1, '条件不足')
                     child.setDisabled(True)
+                else:
+                    child.setText(1, '探索奖励：' + section.attrib['award'])
 
                 treeChapter.addChild(child)
                 subId += 1
             id += 1
+
             # self.items[f"{item.attrib['name']}_{item.attrib['id']}"] = {
             #     "value": f"{item.attrib['type']}_{item.attrib['id']}",
             #     "type": item.attrib['type'],
@@ -183,9 +194,7 @@ class Spirite(object):
                     value = arr[0] + '_' + arr[1]
                     textHtml += f'''
                         <p>
-                            <span class="thick">[{time.strftime("%H:%M:%S")}]</span>
-                            <span class="thick success">[获得]</span>
-                            <span>{self.items[value]['name']} x {str(arr[2])}</span>
+                            <span class="thick">[{time.strftime("%H:%M:%S")}]</span><span class="thick success">[获得]</span><span>{self.items[value]['name']} x {str(arr[2])}</span>
                         </p>
                     '''
 
@@ -209,12 +218,12 @@ class Spirite(object):
 
     def handleTreeItemChange(self, item):
         iterator = QTreeWidgetItemIterator(self.treeSpirite)
-
+        self.currentExplore = {}  # 清空一下，防止重复点击一个地图会造成已经选择的假象
         while iterator.value():
             it = iterator.value()
             if it.text(2) and it != item:
                 it.setCheckState(0, 0)
-            elif it.text(2):
+            elif it.text(2) and it.checkState(0) == 2:
                 self.currentExplore = json.loads(it.text(2))
                 # print(self.currentExplore)
 
@@ -257,6 +266,13 @@ class Spirite(object):
     def handleRefreshSpiriteInfo(self):
         self.loadSpiriteInfo()
         self.refreshSpiriteInfo()
+        self.btnExplore.setEnabled(True)
+        self.btnExplore.setText("开始探索")
+
+        textHtml = f'''<p><span class="thick">[{time.strftime("%H:%M:%S")}]</span><span class="thick success">[完成]</span><span>探险结束了</span></p>'''
+
+        self.spiriteLogText = textHtml + self.spiriteLogText
+        self.tBrowSpiriteLog.setText(self.spiriteLogCss + self.spiriteLogText)
 
     # 开始探险
     def handleExplore(self):
@@ -264,6 +280,8 @@ class Spirite(object):
             tool=self.tool,
             currentExplore=self.currentExplore,
         )
+        self.btnExplore.setEnabled(False)
+        self.btnExplore.setText("探索中...")
         self.threadExplore.business_explored.connect(self.refreshSpiriteLog)
         self.threadExplore.business_explored_refresh.connect(self.handleRefreshSpiriteInfo)
         self.threadExplore.start()
@@ -290,7 +308,7 @@ class Spirite(object):
                 while times > 0:
                     spiriteRes = self.tool.post(url="https://card.qzone.qq.com/cgi-bin/card_user_spirite", data=data)
                     spiriteData = spiriteRes.json()
-                    print(spiriteData)
+                    # print(spiriteData)
                     times -= 1
                     # spiriteData = {'code': 0,
                     #                'content': '73_0_3,56_38_1,73_0_2',

@@ -56,7 +56,9 @@ class FormLogin(QDialog):
         # arr = text.split(';')
         cookies = {
             "uin": 'o' + self.uinLineEdit.text(),
-            "skey": '@' + self.sKeyLineEdit.text()
+            "skey": '@' + self.sKeyLineEdit.text(),
+            "cp_token_good": f"{self.uinLineEdit.text()}@{self.sKeyLineEdit.text()}606129"
+
         }
 
         gol.set_value('cookies', cookies)
