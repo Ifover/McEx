@@ -363,17 +363,17 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>731</width>
-        <height>331</height>
+        <width>411</width>
+        <height>361</height>
        </rect>
       </property>
       <property name="title">
-       <string>GroupBox</string>
+       <string>赠送礼物</string>
       </property>
       <widget class="QListWidget" name="listWidget">
        <property name="geometry">
         <rect>
-         <x>5</x>
+         <x>10</x>
          <y>20</y>
          <width>385</width>
          <height>180</height>
@@ -497,6 +497,137 @@
          <string>8</string>
         </property>
        </item>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_4">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>210</y>
+         <width>161</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>信息</string>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_6">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>221</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>优先赠送</string>
+       </property>
+       <widget class="QPlainTextEdit" name="plainTextEdit">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>141</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <property name="plainText">
+         <string>sd
+sdsd
+sd
+sd
+sd
+sd
+sd
+sd
+s
+d</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QPushButton" name="pushButton_11">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>310</y>
+         <width>141</width>
+         <height>40</height>
+        </rect>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>40</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>开送</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_5">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>10</y>
+        <width>361</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>收到礼物</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_7">
+      <property name="geometry">
+       <rect>
+        <x>429</x>
+        <y>258</y>
+        <width>360</width>
+        <height>111</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>日志</string>
+      </property>
+      <widget class="QTextBrowser" name="textBrowser">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>350</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="html">
+        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:696;&quot;&gt;[16:22:14]&lt;/span&gt;&lt;span style=&quot; font-weight:696; color:#57e4ef;&quot;&gt;[领取]&lt;/span&gt;送给[12121212]卡片蚕丝&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:696;&quot;&gt;[16:22:14]&lt;/span&gt;&lt;span style=&quot; font-weight:696; color:#3f99c7;&quot;&gt;[赠送]&lt;/span&gt;领取[12121212]卡片蚕丝&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:696;&quot;&gt;[16:22:14]&lt;/span&gt;&lt;span style=&quot; font-weight:696; color:#3f99c7;&quot;&gt;[赠送]&lt;/span&gt;卡片蚕丝&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:696;&quot;&gt;[16:22:14]&lt;/span&gt;&lt;span style=&quot; font-weight:696; color:#57e4ef;&quot;&gt;[领取]&lt;/span&gt;卡片蚕丝 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
       </widget>
      </widget>
     </widget>

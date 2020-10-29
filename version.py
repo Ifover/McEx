@@ -6,8 +6,8 @@ VSVersionInfo(
   ffi=FixedFileInfo(
     # filevers and prodvers should be always a tuple with four items: (1, 2, 3, 4)
     # Set not needed items to zero 0.
-    filevers=(2, 0, 2, 102711),
-    prodvers=(2, 0, 2, 102711),
+    filevers=(2, 0, 3, 1029),
+    prodvers=(2, 0, 3, 1029),
     # Contains a bitmask that specifies the valid bits 'flags'r
     mask=0x3f,
     # Contains a bitmask that specifies the Boolean attributes of the file.
@@ -31,10 +31,10 @@ VSVersionInfo(
         u'080404b0',
         [StringStruct(u'CompanyName', u'Underwater Cubs'),
         StringStruct(u'FileDescription', u'魔法卡片超级无敌Super帅的换卡器'),
-        StringStruct(u'FileVersion', u'2.0.2'),
+        StringStruct(u'FileVersion', u'2.0.3'),
         StringStruct(u'LegalCopyright', u'Copyright (C) 2020 Underwater Cubs. All Rights Reserved'),
         StringStruct(u'ProductName', u'Super McEx'),
-        StringStruct(u'ProductVersion', u'2.0.2')])
+        StringStruct(u'ProductVersion', u'2.0.3')])
       ]), 
     VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
   ]

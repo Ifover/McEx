@@ -2,9 +2,9 @@ from PyQt5.QtWidgets import *
 import sys
 from MainWindow import MainWindow
 from FormLogin import FormLogin
-
 import gol
 from Tools import Tools
+import time
 
 if __name__ == '__main__':
     gol._init()

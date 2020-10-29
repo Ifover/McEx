@@ -124,10 +124,10 @@ class Ui_MainWindow(object):
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
         self.groupBox_3 = QtWidgets.QGroupBox(self.tab_3)
-        self.groupBox_3.setGeometry(QtCore.QRect(10, 10, 731, 331))
+        self.groupBox_3.setGeometry(QtCore.QRect(10, 10, 411, 361))
         self.groupBox_3.setObjectName("groupBox_3")
         self.listWidget = QtWidgets.QListWidget(self.groupBox_3)
-        self.listWidget.setGeometry(QtCore.QRect(5, 20, 385, 180))
+        self.listWidget.setGeometry(QtCore.QRect(10, 20, 385, 180))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(100)
         sizePolicy.setVerticalStretch(100)
@@ -172,6 +172,35 @@ class Ui_MainWindow(object):
         self.listWidget.addItem(item)
         item = QtWidgets.QListWidgetItem()
         self.listWidget.addItem(item)
+        self.groupBox_4 = QtWidgets.QGroupBox(self.groupBox_3)
+        self.groupBox_4.setGeometry(QtCore.QRect(240, 210, 161, 91))
+        self.groupBox_4.setObjectName("groupBox_4")
+        self.groupBox_6 = QtWidgets.QGroupBox(self.groupBox_3)
+        self.groupBox_6.setGeometry(QtCore.QRect(10, 210, 221, 141))
+        self.groupBox_6.setObjectName("groupBox_6")
+        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.groupBox_6)
+        self.plainTextEdit.setGeometry(QtCore.QRect(10, 30, 141, 101))
+        self.plainTextEdit.setObjectName("plainTextEdit")
+        self.pushButton_11 = QtWidgets.QPushButton(self.groupBox_3)
+        self.pushButton_11.setGeometry(QtCore.QRect(250, 310, 141, 40))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(40)
+        sizePolicy.setHeightForWidth(self.pushButton_11.sizePolicy().hasHeightForWidth())
+        self.pushButton_11.setSizePolicy(sizePolicy)
+        self.pushButton_11.setMinimumSize(QtCore.QSize(0, 40))
+        self.pushButton_11.setSizeIncrement(QtCore.QSize(0, 40))
+        self.pushButton_11.setIconSize(QtCore.QSize(20, 20))
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.groupBox_5 = QtWidgets.QGroupBox(self.tab_3)
+        self.groupBox_5.setGeometry(QtCore.QRect(430, 10, 361, 241))
+        self.groupBox_5.setObjectName("groupBox_5")
+        self.groupBox_7 = QtWidgets.QGroupBox(self.tab_3)
+        self.groupBox_7.setGeometry(QtCore.QRect(429, 258, 360, 111))
+        self.groupBox_7.setObjectName("groupBox_7")
+        self.textBrowser = QtWidgets.QTextBrowser(self.groupBox_7)
+        self.textBrowser.setGeometry(QtCore.QRect(10, 20, 350, 91))
+        self.textBrowser.setObjectName("textBrowser")
         self.tabWidget.addTab(self.tab_3, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -213,7 +242,7 @@ class Ui_MainWindow(object):
         self.groupBox.setTitle(_translate("MainWindow", "GroupBox"))
         self.pushButton_8.setText(_translate("MainWindow", "PushButton"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "灵宠"))
-        self.groupBox_3.setTitle(_translate("MainWindow", "GroupBox"))
+        self.groupBox_3.setTitle(_translate("MainWindow", "赠送礼物"))
         __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
         item = self.listWidget.item(0)
@@ -233,5 +262,28 @@ class Ui_MainWindow(object):
         item = self.listWidget.item(7)
         item.setText(_translate("MainWindow", "8"))
         self.listWidget.setSortingEnabled(__sortingEnabled)
+        self.groupBox_4.setTitle(_translate("MainWindow", "信息"))
+        self.groupBox_6.setTitle(_translate("MainWindow", "优先赠送"))
+        self.plainTextEdit.setPlainText(_translate("MainWindow", "sd\n"
+"sdsd\n"
+"sd\n"
+"sd\n"
+"sd\n"
+"sd\n"
+"sd\n"
+"sd\n"
+"s\n"
+"d"))
+        self.pushButton_11.setText(_translate("MainWindow", "开送"))
+        self.groupBox_5.setTitle(_translate("MainWindow", "收到礼物"))
+        self.groupBox_7.setTitle(_translate("MainWindow", "日志"))
+        self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:696;\">[16:22:14]</span><span style=\" font-weight:696; color:#57e4ef;\">[领取]</span>送给[12121212]卡片蚕丝</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:696;\">[16:22:14]</span><span style=\" font-weight:696; color:#3f99c7;\">[赠送]</span>领取[12121212]卡片蚕丝</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:696;\">[16:22:14]</span><span style=\" font-weight:696; color:#3f99c7;\">[赠送]</span>卡片蚕丝</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:696;\">[16:22:14]</span><span style=\" font-weight:696; color:#57e4ef;\">[领取]</span>卡片蚕丝 </p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "礼物"))
         self.menu10.setTitle(_translate("MainWindow", "10"))

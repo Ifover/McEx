@@ -5,10 +5,11 @@ from PyQt5.QtWidgets import *
 from xml.etree import ElementTree
 from modules.McEx import McEx
 from modules.Spirite import Spirite
-# from modules.Gifts import Gifts
+from modules.Gifts import Gifts
 import win32gui
 import win32con
 import gol
+import time
 
 
 class MainWindow(QMainWindow):
@@ -70,6 +71,8 @@ class MainWindow(QMainWindow):
 
         self.tabWidget.setStyleSheet('.QTabWidget{background-color:#f0f0f0}')
 
+        timeStart = time.time()
+
         self.tabMcEx = QtWidgets.QWidget()
         self.tabWidget.addTab(self.tabMcEx, "换卡")
         self.McEx = McEx()
@@ -89,16 +92,19 @@ class MainWindow(QMainWindow):
             uin=gol.get_value('cookies')['uin'][1:]
         )
 
-        # self.tabGifts = QtWidgets.QWidget()
-        # self.tabWidget.addTab(self.tabGifts, "礼物")
-        # self.Gifts = Gifts()
-        # self.Gifts.setupUi(
-        #     tool=self.tool,
-        #     tabGifts=self.tabGifts,
-        #     labelStatusStr=self.labelStatusStr,
-        #     uin=gol.get_value('cookies')['uin'][1:]
-        # )
-        self.tabWidget.setCurrentIndex(0)
+        self.tabGifts = QtWidgets.QWidget()
+        self.tabWidget.addTab(self.tabGifts, "礼物")
+        self.Gifts = Gifts()
+        self.Gifts.setupUi(
+            tool=self.tool,
+            tabGifts=self.tabGifts,
+            labelStatusStr=self.labelStatusStr,
+            uin=gol.get_value('cookies')['uin'][1:]
+        )
+
+        timeEnd = time.time()
+        # print(timeEnd - timeStart)
+        self.tabWidget.setCurrentIndex(2)
 
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")

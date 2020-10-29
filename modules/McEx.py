@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # import sys
 # import time
+import threading
+import queue
 
 from xml.etree import ElementTree
 
@@ -10,7 +12,6 @@ from PyQt5.QtGui import *  # QPropertyAnimation
 from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import QSound
 
-from modules.SearchUser import SearchUser
 import gol
 
 
@@ -523,7 +524,7 @@ class McEx(object):
         self.btnFriendOpen.setEnabled(True)  # 卡友容器 - 打开网站
 
         self.loadFriendBox()
-        self.sound = QSound('../sound/find.wav')
+        self.sound = QSound('./sound/find.wav')
         self.sound.play()
 
     # 换卡 - 请求
@@ -547,11 +548,11 @@ class McEx(object):
         if code == '0':
             self.labelStatusStr.setStyleSheet("QWidget{color: #28a745}")  # success
             self.labelStatusStr.setText('交换成功~')
-            self.sound = QSound('../sound/success.wav')
+            self.sound = QSound('./sound/success.wav')
         else:
             self.labelStatusStr.setStyleSheet("QWidget{color: #dc3545}")  # error
             self.labelStatusStr.setText(etXml.attrib['message'])
-            self.sound = QSound('../sound/fail.wav')
+            self.sound = QSound('./sound/fail.wav')
 
         self.sound.play()
         self.btnFriendExChange.setEnabled(False)
@@ -728,3 +729,163 @@ class McEx(object):
     def handleTbThemeListClicked(self, i):
         self.currentTheme = self.themesList[i]
         self.createThemeList()
+
+
+class SearchUser(QThread):
+    sec_changed_signal = pyqtSignal(int)  # 信号类型：int
+    theCardIsSearched = pyqtSignal(str)  # 信号类型：str
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.opuinStr = ""
+        self.times = 0
+        self.exitFlag = False  # 找到了就会变成True
+        self.tid = kwargs['themeId']
+        self.findCards = kwargs['selectCardList']  # 要找寻的卡片ID
+        self.tool = kwargs['tool']  # 要找寻的卡片ID
+        self.isExch = kwargs['isExch']  # 跳过有要求的卡友
+        self.rootThemes = kwargs['rootThemeDict']
+
+    def run(self):
+        # tool = Tools()
+        newArr = []
+        for i in self.rootThemes:
+            newArr.insert(0, self.rootThemes[i])
+        self.rootThemes = newArr
+        # print(self.rootThemes)
+
+        while not self.exitFlag:
+            mCardUserThemeList = {
+                "cmd": "card_user_theme_list",
+                "h5ver": 1,
+                "uin": gol.get_value('uin'),
+                "tid": int(self.tid),  # 卡友正在练的套卡ID985  int(self.tid)
+            }
+
+            res = self.tool.post(params=mCardUserThemeList)
+            root = ElementTree.XML(res.text)
+
+            if root.attrib["code"] != '0':
+                self.setDefaultTid()
+
+            nodeList = root.findall("node")
+            usersList = []
+
+            for uin in nodeList:
+                uins = uin.attrib["uin"]
+                userList = uins.split('|')
+                userList = [i for i in userList if i != '']  # 去除空
+                self.times += len(userList)
+                usersList.append(userList)
+
+            self.sec_changed_signal.emit(self.times)
+            workQueue = queue.Queue(len(usersList))
+
+            threads = []
+            threadID = 1
+            # 填充队列
+            for index in range(len(usersList)):
+                workQueue.put(index)
+            # 创建新线程
+            for userList in usersList:
+                thread = SearchCard(
+                    _self=self,
+                    threadID=threadID,
+                    userList=userList,
+                    workQueue=workQueue,
+                    findCards=self.findCards,
+                    tool=self.tool,
+                )
+                # thread = searchCard(self, threadID, userList, workQueue)
+                thread.start()
+                threads.append(thread)
+                threadID += 1
+            # 等待队列清空
+            # while not workQueue.empty():
+            #     pass
+
+            # 通知线程是时候退出
+            # exitFlag = 1
+            # 等待所有线程完成
+            for t in threads:
+                t.join()
+            # return opuinStr
+            # print("退出主线程")
+
+        if len(self.opuinStr) > 0:
+            self.theCardIsSearched.emit(self.getOpuinStr())
+
+    def setFlag(self):
+        self.exitFlag = True
+
+    def setDefaultTid(self):
+        for item in self.rootThemes:
+            if int(item['id']) < int(self.tid):
+                if not (item['type'] in [0, 1, 2, 5, 9]):
+                    # self.setDefaultTid()
+                    continue
+                else:
+                    self.tid = item['id']
+                    break
+
+    def getOpuinStr(self):
+        try:
+            return self.opuinStr
+        except Exception:
+            return None
+
+
+class SearchCard(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        threading.Thread.__init__(self)
+        self._self = kwargs['_self']
+        self.threadID = kwargs['threadID']
+        self.userList = kwargs['userList']
+        self.q = kwargs['workQueue']
+        self.findCards = kwargs['findCards']
+        self.tool = kwargs['tool']
+
+    def run(self):
+        # tool = Tools()
+        # print("开启线程：" + str(len(self.userList)))
+        # self.searchCard(self.threadID, self.userList, self.q)
+        # print("退出线程：" + str(len(self.userList)))
+        # print(self.findCards)
+        mCardUserMainPage = {
+            "cmd": "card_user_mainpage",
+            "h5ver": 1,
+        }
+
+        for opuin in self.userList:
+            if not self._self.exitFlag:
+                mCardUserMainPageData = {
+                    "uin": self.tool.uin,
+                    "opuin": opuin
+                }
+
+                r = self.tool.post(params=mCardUserMainPage,
+                                   data=mCardUserMainPageData)
+                root = ElementTree.XML(r.text)
+                # 有时候可能会请求失败
+                if root.attrib["code"] != '0':
+                    continue
+                changebox = root.find("changebox")
+                # 针对那些有换卡要求的
+                if self._self.isExch:
+                    if changebox.attrib["exch"] != '0,0,0,0':
+                        continue
+
+                changeBoxsCards = changebox.findall("card")
+
+                for card in changeBoxsCards:
+
+                    # if(card.attrib["id"] != '0' and card.attrib["id"] != '-1'):
+                    if (card.attrib["id"] in self._self.findCards and card.attrib["unlock"] == '0'):
+                        # print(card.attrib["unlock"])
+
+                        self._self.opuinStr = opuin
+                        self._self.exitFlag = True
+                        # print("\n【{cardName}[{id}]】==> http://appimg2.qq.com/card/index_v3.html#opuin={opuin}".format(
+                        #     cardName=mcInfo.getCardInfo(card.attrib["id"])['cardName'], id=card.attrib["id"], opuin=opuin))
+                        # winsound.Beep(600, 700)
+                        break  # 卡友可能有多张该卡,避免没必要的输出
