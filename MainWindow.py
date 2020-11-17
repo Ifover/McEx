@@ -11,6 +11,7 @@ import win32con
 import gol
 import time
 
+import resource
 
 class MainWindow(QMainWindow):
 

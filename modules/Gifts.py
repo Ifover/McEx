@@ -27,10 +27,9 @@ class Gifts(object):
 
         self.createPre()
 
-
-
         self.btnSendGift = QtWidgets.QPushButton("开送", self.gBoxGifts)
         self.btnSendGift.setGeometry(QtCore.QRect(230, 315, 175, 40))
+        self.btnSendGift.clicked.connect(self.handleStartSend)
 
         self.gBoxGet = QtWidgets.QGroupBox("收到礼物", self.tabGifts)
         self.gBoxGet.setGeometry(QtCore.QRect(425, 10, 360, 240))
@@ -90,7 +89,15 @@ class Gifts(object):
 
         self.fLayInfo.addRow("剩余次数", self.labTimes)
 
-        self.labTimes.setText('49/50')
+    def loadInfo(self):
+        params = {
+            "g_tk": 912350831,
+            "appid": 365,
+            "uin": self.uin
+        }
+        freeGift = self.tool.get('http://hydra.qzone.qq.com/cgi-bin/freegift/freegift_get_frds', params)
+        self.labTimes.setText(f"{freeGift['quota_num']}/50")
+
 
     # 创建 - 优先赠送
     def createPre(self):
@@ -113,7 +120,14 @@ class Gifts(object):
         # self.btnSearch.setEnabled(False)
         # self.selectCardList = []
         for i in list(selectedItems):
-            print(self.giftList[self.listWidget.row(i)])
+            print(self.giftList[self.lWGift.row(i)])
         #     self.selectCardList.append(self.currentCards[]['id'])
         # if len(self.selectCardList) > 0:
         #     self.btnSearch.setEnabled(True)
+
+    # 开始赠送
+    def handleStartSend(self):
+        th = threading.Thread(target=self.loadInfo)
+        th.start()
+
+        # print(1)

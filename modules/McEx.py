@@ -67,6 +67,8 @@ class McEx(object):
                 "diff": int(theme.attrib["diff"]),
                 "type": int(theme.attrib["type"]),
                 "time": int(theme.attrib["time"]),
+                "pages": int(theme.attrib["pages"]),
+                "onsaleTime": int(theme.attrib["onsale_time"]),
             }
         # endregion
 
@@ -615,8 +617,8 @@ class McEx(object):
         self.componendNumPrise()
 
     # 状态栏 - 搜索中[更新]
-    def updateStatusBar(self, num):
-        self.labelStatusStr.setText('搜索中... [{0}]'.format(num))
+    def updateStatusBar(self, times, rightTimes):
+        self.labelStatusStr.setText(f"搜索中... [{rightTimes}]，跳过[{times - rightTimes}]")
         self.labelStatusStr.setStyleSheet("QWidget{color: #333333}")
 
     # 选择套卡 - 确定
@@ -732,7 +734,7 @@ class McEx(object):
 
 
 class SearchUser(QThread):
-    sec_changed_signal = pyqtSignal(int)  # 信号类型：int
+    sec_changed_signal = pyqtSignal(int, int)  # 信号类型：int
     theCardIsSearched = pyqtSignal(str)  # 信号类型：str
 
     def __init__(self, *args, **kwargs):
@@ -745,6 +747,8 @@ class SearchUser(QThread):
         self.tool = kwargs['tool']  # 要找寻的卡片ID
         self.isExch = kwargs['isExch']  # 跳过有要求的卡友
         self.rootThemes = kwargs['rootThemeDict']
+        self.historyList = []
+        self.searchedList = []
 
     def run(self):
         # tool = Tools()
@@ -770,15 +774,27 @@ class SearchUser(QThread):
 
             nodeList = root.findall("node")
             usersList = []
+            if len(nodeList) < 2:
+                self.setDefaultTid()
 
             for uin in nodeList:
                 uins = uin.attrib["uin"]
                 userList = uins.split('|')
                 userList = [i for i in userList if i != '']  # 去除空
-                self.times += len(userList)
-                usersList.append(userList)
+                newUserList = []
+                for i in userList:
+                    if not (i in self.searchedList):
+                        newUserList.append(i)
+                        self.searchedList.append(i)
 
-            self.sec_changed_signal.emit(self.times)
+                # newUserList = [i for i in userList if not (i in self.searchedList) ]
+
+                # print(len(self.searchedList), len(userList), len(newUserList))
+
+                self.times += len(userList)
+                usersList.append(newUserList)
+
+            self.sec_changed_signal.emit(self.times, len(self.searchedList))
             workQueue = queue.Queue(len(usersList))
 
             threads = []
@@ -788,18 +804,19 @@ class SearchUser(QThread):
                 workQueue.put(index)
             # 创建新线程
             for userList in usersList:
-                thread = SearchCard(
-                    _self=self,
-                    threadID=threadID,
-                    userList=userList,
-                    workQueue=workQueue,
-                    findCards=self.findCards,
-                    tool=self.tool,
-                )
-                # thread = searchCard(self, threadID, userList, workQueue)
-                thread.start()
-                threads.append(thread)
-                threadID += 1
+                if len(userList) > 0:
+                    thread = SearchCard(
+                        _self=self,
+                        threadID=threadID,
+                        userList=userList,
+                        workQueue=workQueue,
+                        findCards=self.findCards,
+                        tool=self.tool,
+                    )
+                    # thread = searchCard(self, threadID, userList, workQueue)
+                    thread.start()
+                    threads.append(thread)
+                    threadID += 1
             # 等待队列清空
             # while not workQueue.empty():
             #     pass
@@ -821,11 +838,9 @@ class SearchUser(QThread):
     def setDefaultTid(self):
         for item in self.rootThemes:
             if int(item['id']) < int(self.tid):
-                if not (item['type'] in [0, 1, 2, 5, 9]):
-                    # self.setDefaultTid()
-                    continue
-                else:
+                if item['pages'] == 0 and item['onsaleTime'] == 0 and not (item['id'] in self.historyList):
                     self.tid = item['id']
+                    self.historyList.append(item['id'])
                     break
 
     def getOpuinStr(self):
