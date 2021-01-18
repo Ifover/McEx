@@ -7,7 +7,7 @@ import json
 import threading
 import time
 import requests
-import execjs
+# import execjs
 
 
 class Gifts(object):

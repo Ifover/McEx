@@ -95,17 +95,17 @@ class MainWindow(QMainWindow):
 
         self.tabGifts = QtWidgets.QWidget()
         self.tabWidget.addTab(self.tabGifts, "礼物")
-        self.Gifts = Gifts()
-        self.Gifts.setupUi(
-            tool=self.tool,
-            tabGifts=self.tabGifts,
-            labelStatusStr=self.labelStatusStr,
-            uin=gol.get_value('cookies')['uin'][1:]
-        )
+        # self.Gifts = Gifts()
+        # self.Gifts.setupUi(
+        #     tool=self.tool,
+        #     tabGifts=self.tabGifts,
+        #     labelStatusStr=self.labelStatusStr,
+        #     uin=gol.get_value('cookies')['uin'][1:]
+        # )
 
         timeEnd = time.time()
         # print(timeEnd - timeStart)
-        self.tabWidget.setCurrentIndex(2)
+        # self.tabWidget.setCurrentIndex(2)
 
     def handleLogin(self):
         self.labelStatusStr.setText("正在加载登录窗口~")

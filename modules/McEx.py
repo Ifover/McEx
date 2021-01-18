@@ -106,7 +106,7 @@ class McEx(object):
         self.tabWidget.setGeometry(QtCore.QRect(5, 50, 160, 20))
 
         self.themesList = [
-            {"id": 1, "label": "发行", "type": [0, 2]},
+            {"id": 1, "label": "发行", "type": [0, 2, 4]},
             {"id": 2, "label": "下架", "type": [1, 5]},
             {"id": 3, "label": "闪卡", "type": [9]},
         ]
